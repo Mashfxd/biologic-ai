@@ -1,0 +1,6 @@
+{
+  "name": "ZooAI - Producción Animal",
+  "description": "Sistema de gestión con IA para la optimización de producción de animales menores (conejos, aves, etc.). Incluye seguimiento de salud, alimentación y alertas inteligentes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}

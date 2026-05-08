@@ -1,0 +1,58 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id       Int      @id @default(autoincrement())
+  username String   @unique
+  email    String   @unique
+  password String
+  role     String   @default("operator")
+}
+
+model Animal {
+  id             Int       @id @default(autoincrement())
+  name           String
+  species        String
+  breed          String
+  birthDate      DateTime  // Actualizado a mayúscula
+  gender         String
+  status         String    @default("healthy")
+  currentWeight  Float     // Actualizado a mayúscula
+  createdAt      DateTime  @default(now()) // Agregado para coincidir con Neon
+  updatedAt      DateTime  @updatedAt      // Prisma manejará esta fecha automáticamente
+  health_logs    HealthLog[]
+  feeding_logs   FeedingLog[]
+  growth_logs    GrowthLog[]
+}
+
+model HealthLog {
+  id         Int      @id @default(autoincrement())
+  animal_id  Int
+  animal     Animal   @relation(fields: [animal_id], references: [id])
+  date       DateTime @default(now())
+  diagnostic String
+  treatment  String
+}
+
+model GrowthLog {
+  id        Int      @id @default(autoincrement())
+  animal_id Int
+  animal    Animal   @relation(fields: [animal_id], references: [id])
+  date      DateTime @default(now())
+  weight    Float
+}
+
+model FeedingLog {
+  id        Int      @id @default(autoincrement())
+  animal_id Int
+  animal    Animal   @relation(fields: [animal_id], references: [id])
+  date      DateTime @default(now())
+  food_type String
+  quantity  Float
+}
