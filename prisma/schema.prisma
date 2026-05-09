@@ -23,6 +23,9 @@ model Animal {
   birthDate      DateTime  // Actualizado a mayúscula
   gender         String
   status         String    @default("healthy")
+  purpose        String?
+  litterCode     String?
+  readyForMating Boolean   @default(false)
   currentWeight  Float     // Actualizado a mayúscula
   createdAt      DateTime  @default(now()) // Agregado para coincidir con Neon
   updatedAt      DateTime  @updatedAt      // Prisma manejará esta fecha automáticamente
