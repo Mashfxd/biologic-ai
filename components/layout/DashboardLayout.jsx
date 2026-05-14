@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, Activity, Calendar, Stethoscope, 
-  TrendingUp, Users, LogOut, Bell, PawPrint 
+  TrendingUp, Users, LogOut, Bell, PawPrint,
+  ClipboardList, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -50,17 +51,18 @@ export default function DashboardLayout({ children }) {
           </div>
           <span className="text-lg font-bold text-slate-800 tracking-tight">BioLogic AI</span>
         </div>
-        <nav className="flex-1 px-4 space-y-1">
-          <SidebarItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" active={pathname === '/dashboard'} />
-          <SidebarItem href="/animals" icon={ClipboardList} label="Inventario" active={pathname === '/animals'} />
-          <SidebarItem href="/feeding" icon={Calendar} label="Alimentación" active={pathname === '/feeding'} />
-          <SidebarItem href="/health" icon={Stethoscope} label="Salud Animal" active={pathname === '/health'} />
-          <SidebarItem href="/growth" icon={TrendingUp} label="Crecimiento" active={pathname === '/growth'} />
-          <SidebarItem href="/production" icon={TrendingUp} label="Producción" active={pathname === '/production'} />
-          {currentUser.role === 'admin' && (
-            <SidebarItem href="/users" icon={Users} label="Usuarios y Roles" active={pathname === '/users'} />
-          )}
-        </nav>
+    <nav className="flex-1 px-4 space-y-1">
+        <SidebarItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" active={pathname === '/dashboard'} />
+        <SidebarItem href="/animals" icon={ClipboardList} label="Inventario y Censo" active={pathname === '/animals'} />
+        <SidebarItem href="/production" icon={BarChart3} label="Producción" active={pathname === '/production'} />
+        <SidebarItem href="/feeding" icon={Calendar} label="Alimentación" active={pathname === '/feeding'} />
+        <SidebarItem href="/health" icon={Stethoscope} label="Salud Animal" active={pathname === '/health'} />
+        <SidebarItem href="/growth" icon={TrendingUp} label="Crecimiento" active={pathname === '/growth'} />
+  
+        {currentUser?.role === 'admin' && (
+          <SidebarItem href="/users" icon={Users} label="Usuarios y Roles" active={pathname === '/users'} />
+         )}
+     </nav>
         <div className="p-4 mt-auto border-t border-slate-200">
           <div className="flex items-center p-2 gap-3 rounded-lg hover:bg-slate-50 transition-colors">
             <div className="w-8 h-8 rounded-full bg-slate-200 border border-slate-300 flex items-center justify-center text-[10px] font-bold text-slate-600">
