@@ -14,7 +14,7 @@ export default function WelcomeModal({ user, stats }) {
           <button onClick={() => setIsOpen(false)} className="absolute top-4 right-4 p-2 bg-white/20 hover:bg-white/40 text-white rounded-full transition-colors">
             <X size={20} />
           </button>
-          <img src="/logo-serepar.png" alt="SEREPAR" className="h-20 drop-shadow-lg" />
+          <img src="/logo.jpg" alt="SEREPAR" className="h-20 drop-shadow-lg" />
         </div>
         <div className="p-8">
           <div className="text-center mb-8">
