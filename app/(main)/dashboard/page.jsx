@@ -1,8 +1,8 @@
 "use client";
 import React, { useState, useEffect } from 'react';
+import WelcomeModal from '@/components/layout/WelcomeModal'; // IMPORTANTE: Importa el modal
 import { 
-  PawPrint, Activity, Weight, TrendingUp, Cpu, 
-  PlusCircle, ClipboardList, ChartBar 
+  PawPrint, Activity, Weight, TrendingUp, Cpu 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Card from '@/components/ui/Card';
@@ -10,99 +10,43 @@ import StatCard from '@/components/ui/StatCard';
 
 export default function DashboardPage() {
   const [animals, setAnimals] = useState([]);
+  const [currentUser, setCurrentUser] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => { fetchAnimals(); }, []);
+  useEffect(() => { 
+    fetchAnimals();
+    // Obtener usuario para el saludo
+    const savedUser = localStorage.getItem('zooai_user');
+    if (savedUser) setCurrentUser(JSON.parse(savedUser));
+  }, []);
 
   const fetchAnimals = async () => {
     try {
       const res = await fetch('/api/animals');
-      const text = await res.text(); 
-      if (!res.ok || !text) { setAnimals([]); return; }
-      const data = JSON.parse(text);
+      const data = await res.json();
       setAnimals(Array.isArray(data) ? data : []);
     } catch (error) { setAnimals([]); }
   };
 
-  const runAiAnalysis = async () => {
-    setIsAnalyzing(true);
-    setAiAnalysis("Consultando con el experto de BioLogic AI...");
-    try {
-      const [resAni, resFeed, resGrowth, resHealth] = await Promise.all([
-        fetch('/api/animals'), fetch('/api/feeding'), fetch('/api/growth'), fetch('/api/health')
-      ]);
-      const data = {
-        animals: await resAni.json(),
-        feeding: await resFeed.json(),
-        growth: await resGrowth.json(),
-        health: await resHealth.json()
-      };
-      const resAi = await fetch('/api/ai/analyze', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data)
-      });
-      const result = await resAi.json();
-      if (resAi.ok && result.analysis) {
-        setAiAnalysis(result.analysis);
-      } else {
-        setAiAnalysis(`Aviso: ${result.error || "La IA no pudo procesar los datos."}`);
-      }
-    } catch (error) {
-      setAiAnalysis("Error de conexión con el servidor.");
-    } finally {
-      setIsAnalyzing(false);
-    }
+  // Lógica para llenar los datos del Modal
+  const systemStats = {
+    totalAnimals: animals.length,
+    alerts: 8,
+    ready: animals.filter(a => a.gender === 'Hembra' && a.currentWeight >= 800).length,
+    gpd: 12.4
   };
 
   const totalWeight = animals.reduce((sum, a) => sum + (Number(a.currentWeight) || 0), 0);
   const averageWeight = animals.length > 0 ? (totalWeight / animals.length).toFixed(2) : "0.00";
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="grid gap-4 md:gap-6">
       
-      {/* --- NUEVA SECCIÓN DE BIENVENIDA --- */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-extrabold text-slate-800 dark:text-white">
-            ¡Bienvenido a BioLogic AI! 👋
-          </h1>
-          <p className="text-slate-500 dark:text-slate-400 font-medium">
-            Gestión técnica y productiva para SEREPAR S.R.L.
-          </p>
-        </div>
-        <div className="px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-100 dark:border-emerald-800 rounded-2xl">
-          <span className="text-emerald-700 dark:text-emerald-400 text-sm font-bold">Servidor: Operativo 🟢</span>
-        </div>
-      </div>
+      {/* VENTANA FLOTANTE DE BIENVENIDA (Solo aparece al loguear) */}
+      <WelcomeModal user={currentUser} stats={systemStats} />
 
-      {/* --- BOTONES DE ACCIÓN RÁPIDA --- */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <button className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-emerald-500 transition-all group">
-          <div className="text-left">
-            <p className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-emerald-600">Nuevo Pesaje</p>
-            <p className="text-[10px] text-slate-400">Registrar evolución de peso</p>
-          </div>
-          <PlusCircle className="text-slate-300 group-hover:text-emerald-500" size={20} />
-        </button>
-        <button className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-blue-500 transition-all group">
-          <div className="text-left">
-            <p className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-blue-600">Control Sanitario</p>
-            <p className="text-[10px] text-slate-400">Tratamientos y vacunas</p>
-          </div>
-          <Activity className="text-slate-300 group-hover:text-blue-500" size={20} />
-        </button>
-        <button className="flex items-center justify-between p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl hover:border-amber-500 transition-all group">
-          <div className="text-left">
-            <p className="font-bold text-slate-700 dark:text-slate-200 group-hover:text-amber-600">Índices de Tesis</p>
-            <p className="text-[10px] text-slate-400">Ver GPD y Prolificidad</p>
-          </div>
-          <ChartBar className="text-slate-300 group-hover:text-amber-500" size={20} />
-        </button>
-      </div>
-
-      {/* --- ESTADÍSTICAS EXISTENTES --- */}
+      {/* --- ESTADÍSTICAS (Diseño Original) --- */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
         <StatCard icon={PawPrint} label="Población Total" value={animals.length} color="bg-emerald-500" trend="+4%" />
         <StatCard icon={Activity} label="Estado Salud" value="Óptimo" color="bg-emerald-500" trend="98%" />
@@ -126,17 +70,17 @@ export default function DashboardPage() {
         </Card>
 
         <div className="lg:col-span-4 space-y-4 md:space-y-6">
-          <div className="bg-slate-900 text-white p-5 md:p-6 rounded-xl shadow-lg relative overflow-hidden group border border-slate-800">
+          <div className="bg-slate-900 text-white p-5 md:p-6 rounded-xl shadow-lg relative border border-slate-800">
             <div className="relative z-10">
               <div className="flex items-center gap-2 mb-3">
                 <div className="w-6 h-6 bg-emerald-500/20 text-emerald-400 rounded-md flex items-center justify-center"><Cpu size={14} /></div>
                 <p className="text-emerald-400 text-[10px] font-bold uppercase tracking-wider">BioLogic IA Activa</p>
               </div>
               <div className="text-xs text-emerald-50/80 leading-relaxed mb-6 italic min-h-[60px]">
-                {aiAnalysis ? aiAnalysis : "Pulsa para analizar el rendimiento zootécnico en tiempo real."}
+                {aiAnalysis || "Pulsa para analizar el rendimiento zootécnico en tiempo real."}
               </div>
-              <button onClick={runAiAnalysis} disabled={isAnalyzing} className="w-full bg-emerald-600 text-white text-[10px] font-bold py-3 px-6 rounded-lg hover:bg-emerald-500 transition-all uppercase">
-                {isAnalyzing ? 'Calculando Índices...' : 'Analizar Producción'}
+              <button className="w-full bg-emerald-600 text-white text-[10px] font-bold py-3 px-6 rounded-lg hover:bg-emerald-500 transition-all uppercase">
+                Analizar Producción
               </button>
             </div>
           </div>
@@ -147,8 +91,8 @@ export default function DashboardPage() {
               <div className="flex items-start gap-3 p-3 bg-red-50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-900/30">
                 <div className="w-2 h-2 mt-1.5 bg-red-500 rounded-full animate-pulse"></div>
                 <div>
-                  <p className="text-[11px] font-bold text-slate-800 dark:text-red-200">Revisión de Empadre Pendiente</p>
-                  <p className="text-[10px] text-slate-500 dark:text-red-300 font-medium">3 hembras superaron los 800g</p>
+                  <p className="text-[11px] font-bold text-slate-800 dark:text-red-200">Revisión de Empadre</p>
+                  <p className="text-[10px] text-slate-500 dark:text-red-300 font-medium">{systemStats.ready} hembras aptas</p>
                 </div>
               </div>
             </div>

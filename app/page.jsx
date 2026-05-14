@@ -85,7 +85,7 @@ export default function LoginPage() {
           <div className="flex flex-col items-center gap-2 mb-8">
            <div className="mb-4">
              <img 
-               src="/public/logo.png" 
+               src="/public/logo.jpg" 
                alt="Logo SEREPAR" 
                className="h-32 w-32 object-contain drop-shadow-sm mx-auto" 
                />
