@@ -83,9 +83,14 @@ export default function LoginPage() {
         {/* Usamos dark:bg-slate-950 para que la tarjeta también se oscurezca */}
         <Card className="shadow-2xl dark:bg-slate-950 dark:border-slate-800 transition-colors">
           <div className="flex flex-col items-center gap-2 mb-8">
-            <div className="p-3 bg-emerald-600 rounded-2xl shadow-xl">
-              <PawPrint size={32} className="text-white" />
-            </div>
+           <div className="mb-4">
+             <img 
+               src="/logo-serepar.png" 
+               alt="Logo SEREPAR" 
+               className="h-32 w-32 object-contain drop-shadow-sm mx-auto" 
+               />
+           </div>
+              
             <h1 className="text-3xl font-bold text-slate-800 dark:text-white tracking-tight">BioLogic AI</h1>
             <p className="text-slate-500 dark:text-slate-400 font-medium italic">Gestión Animal Inteligente</p>
           </div>
