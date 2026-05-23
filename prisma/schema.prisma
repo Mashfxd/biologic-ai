@@ -32,6 +32,10 @@ model Animal {
   health_logs    HealthLog[]
   feeding_logs   FeedingLog[]
   growth_logs    GrowthLog[]
+  // --- NUEVAS RELACIONES PRODUCTIVAS ---
+  // Permite al sistema buscar todos los partos de esta madre o este padre
+  partosComoMadre      ReproductionLog[] @relation("MotherRelation")
+  partosComoPadre      ReproductionLog[] @relation("FatherRelation")
 }
 
 model HealthLog {
@@ -58,4 +62,24 @@ model FeedingLog {
   date      DateTime @default(now())
   food_type String
   quantity  Float
+}
+// 2. AGREGA ESTE NUEVO MODELO AL FINAL DEL ARCHIVO
+model ReproductionLog {
+  id              Int       @id @default(autoincrement())
+  poza            String    // Poza donde ocurrió el evento
+  matingDate      DateTime? // Fecha de empadre (útil para calcular días de gestación)
+  birthDate       DateTime  // Fecha de parto (Dato del cuaderno: "Fecha")
+  bornAlive       Int       // Nacidos vivos (Dato del cuaderno: "Sexo/N°")
+  bornDead        Int       // Nacidos muertos (Dato del cuaderno: "N. Muerto")
+  avgBirthWeight  Float     // Peso promedio al nacer (Dato del cuaderno: "PN")
+  weaningDate     DateTime? // Fecha de destete (Dato del cuaderno: "F. Dest")
+  observations    String?   // Para anotar cosas como "Madre agresiva" o "Baja producción de leche"
+  createdAt       DateTime  @default(now())
+
+  // CONEXIONES ESTRICTAS: Apuntan al ID único del animal en la tabla Animal
+  motherId        Int
+  mother          Animal    @relation("MotherRelation", fields: [motherId], references: [id])
+
+  fatherId        Int?
+  father          Animal?   @relation("FatherRelation", fields: [fatherId], references: [id])
 }
