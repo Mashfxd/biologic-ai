@@ -2,9 +2,9 @@
 import React, { useState, useEffect } from 'react';
 
 // CORRECCIÓN: Rutas relativas apuntando a app/components/
-import WelcomeModal from '../../components/WelcomeModal'; 
-import Card from '../../components/ui/Card';
-import StatCard from '../../components/ui/StatCard';
+import WelcomeModal from '@/components/WelcomeModal'; 
+import Card from '@/components/ui/Card';
+import StatCard from '@/components/ui/StatCard';
 
 import { 
   PawPrint, Activity, Weight, TrendingUp, Cpu 
