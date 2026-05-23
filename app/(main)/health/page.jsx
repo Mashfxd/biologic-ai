@@ -66,7 +66,7 @@ export default function HealthPage() {
 
   return (
     <div className="space-y-4 md:space-y-6 animate-in fade-in duration-500">
-      <Card className="p-4 md:p-6 bg-transparent border-none shadow-none md:bg-white dark:md:bg-slate-900 md:border-solid md:shadow-sm transition-colors">
+      <Card className="p-4 md:p-6 bg-transparent border-none shadow-none md:bg-white md:border-solid md:shadow-sm">
         
         {/* Cabecera */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
