@@ -1,12 +1,15 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import WelcomeModal from '@/components/layout/WelcomeModal'; // IMPORTANTE: Importa el modal
+
+// CORRECCIÓN: Rutas relativas apuntando a app/components/
+import WelcomeModal from '../../components/WelcomeModal'; 
+import Card from '../../components/ui/Card';
+import StatCard from '../../components/ui/StatCard';
+
 import { 
   PawPrint, Activity, Weight, TrendingUp, Cpu 
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import Card from '@/components/ui/Card';
-import StatCard from '@/components/ui/StatCard';
 
 export default function DashboardPage() {
   const [animals, setAnimals] = useState([]);
@@ -31,9 +34,10 @@ export default function DashboardPage() {
 
   // Lógica para llenar los datos del Modal
   const systemStats = {
-    totalAnimals: animals.length,
+    totalAnimals: animals?.length || 0,
     alerts: 8,
-    ready: animals.filter(a => a.gender === 'Hembra' && a.currentWeight >= 800).length,
+    // El ? protege el código en caso de que animals sea null por un microsegundo
+    ready: animals?.filter(a => a?.gender === 'Hembra' && a?.currentWeight >= 800)?.length || 0,
     gpd: 12.4
   };
 
