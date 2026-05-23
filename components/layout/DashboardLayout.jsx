@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }) {
         </div>
     <nav className="flex-1 px-4 space-y-1">
         <SidebarItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" active={pathname === '/dashboard'} />
-        <SidebarItem href="/animals" icon={ClipboardList} label="Inventario y Censo" active={pathname === '/animals'} />
+        <SidebarItem href="/animals" icon={ClipboardList} label="Inventario" active={pathname === '/animals'} />
         <SidebarItem href="/production" icon={BarChart3} label="Producción" active={pathname === '/production'} />
         <SidebarItem href="/feeding" icon={Calendar} label="Alimentación" active={pathname === '/feeding'} />
         <SidebarItem href="/health" icon={Stethoscope} label="Salud Animal" active={pathname === '/health'} />

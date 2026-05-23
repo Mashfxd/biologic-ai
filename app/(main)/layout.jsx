@@ -101,7 +101,8 @@ export default function DashboardLayout({ children }) {
 
         <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-4 print:hidden">
           <SidebarItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" active={pathname === '/dashboard'} onClick={() => setIsMobileMenuOpen(false)} />
-          <SidebarItem href="/animals" icon={Activity} label="Producción" active={pathname === '/animals'} onClick={() => setIsMobileMenuOpen(false)} />
+          <SidebarItem href="/animals" icon={ClipboardList} label="Inventario" active={pathname === '/animals'} onClick={() => setIsMobileMenuOpen(false)} />
+          <SidebarItem href="/production" icon={BarChart3} label="Producción" active={pathname === '/production'} onClick={() => setIsMobileMenuOpen(false)} />
           <SidebarItem href="/feeding" icon={Calendar} label="Alimentación" active={pathname === '/feeding'} onClick={() => setIsMobileMenuOpen(false)} />
           <SidebarItem href="/health" icon={Stethoscope} label="Salud Animal" active={pathname === '/health'} onClick={() => setIsMobileMenuOpen(false)} />
           <SidebarItem href="/growth" icon={TrendingUp} label="Crecimiento" active={pathname === '/growth'} onClick={() => setIsMobileMenuOpen(false)} />
