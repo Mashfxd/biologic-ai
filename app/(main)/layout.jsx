@@ -5,7 +5,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { 
   LayoutDashboard, Activity, Calendar, Stethoscope, 
   TrendingUp, Users, LogOut, Bell, PawPrint, 
-  Menu, X, Sun, Moon, Download
+  Menu, X, Sun, Moon, Download,
+  ClipboardList, BarChart3
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
