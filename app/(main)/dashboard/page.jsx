@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 
 // CORRECCIÓN: Rutas relativas apuntando a app/components/
-import WelcomeModal from '@/components/WelcomeModal'; 
+import WelcomeModal from '@/components/layout/WelcomeModal'; 
 import Card from '@/components/ui/Card';
 import StatCard from '@/components/ui/StatCard';
 
