@@ -7,35 +7,54 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// --- ENUMS (Listas estrictas de valores) ---
+enum Role {
+  ADMIN
+  OPERATOR
+}
+
+enum Gender {
+  MACHO
+  HEMBRA
+}
+
+enum AnimalStatus {
+  HEALTHY
+  SICK
+  SOLD
+  DECEASED
+}
+
+// --- MODELOS ---
 model User {
-  id       Int      @id @default(autoincrement())
-  username String   @unique
-  email    String   @unique
+  id       Int    @id @default(autoincrement())
+  username String @unique
+  email    String @unique
   password String
-  role     String   @default("operator")
+  role     Role   @default(OPERATOR) // Validado por Enum
 }
 
 model Animal {
-  id             Int       @id @default(autoincrement())
-  name           String
-  species        String
-  breed          String
-  birthDate      DateTime  // Actualizado a mayúscula
-  gender         String
-  status         String    @default("healthy")
-  purpose        String?
-  litterCode     String?
-  readyForMating Boolean   @default(false)
-  currentWeight  Float     // Actualizado a mayúscula
-  createdAt      DateTime  @default(now()) // Agregado para coincidir con Neon
-  updatedAt      DateTime  @updatedAt      // Prisma manejará esta fecha automáticamente
-  health_logs    HealthLog[]
-  feeding_logs   FeedingLog[]
-  growth_logs    GrowthLog[]
-  // --- NUEVAS RELACIONES PRODUCTIVAS ---
-  // Permite al sistema buscar todos los partos de esta madre o este padre
-  partosComoMadre      ReproductionLog[] @relation("MotherRelation")
-  partosComoPadre      ReproductionLog[] @relation("FatherRelation")
+  id            Int          @id @default(autoincrement())
+  name          String
+  species       String
+  breed         String
+  birthDate     DateTime     
+  gender        Gender       // Validado por Enum
+  status        AnimalStatus @default(HEALTHY) // Validado por Enum
+  purpose       String?
+  litterCode    String?
+  readyForMating Boolean     @default(false)
+  currentWeight Float      
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt      
+  health_logs   HealthLog[]
+  feeding_logs  FeedingLog[]
+  growth_logs   GrowthLog[]
+  
+  // Relaciones Productivas
+  partosComoMadre ReproductionLog[] @relation("MotherRelation")
+  partosComoPadre ReproductionLog[] @relation("FatherRelation")
 }
 
 model HealthLog {
@@ -63,23 +82,22 @@ model FeedingLog {
   food_type String
   quantity  Float
 }
-// 2. AGREGA ESTE NUEVO MODELO AL FINAL DEL ARCHIVO
+
 model ReproductionLog {
-  id              Int       @id @default(autoincrement())
-  poza            String    // Poza donde ocurrió el evento
-  matingDate      DateTime? // Fecha de empadre (útil para calcular días de gestación)
-  birthDate       DateTime  // Fecha de parto (Dato del cuaderno: "Fecha")
-  bornAlive       Int       // Nacidos vivos (Dato del cuaderno: "Sexo/N°")
-  bornDead        Int       // Nacidos muertos (Dato del cuaderno: "N. Muerto")
-  avgBirthWeight  Float     // Peso promedio al nacer (Dato del cuaderno: "PN")
-  weaningDate     DateTime? // Fecha de destete (Dato del cuaderno: "F. Dest")
-  observations    String?   // Para anotar cosas como "Madre agresiva" o "Baja producción de leche"
-  createdAt       DateTime  @default(now())
+  id             Int       @id @default(autoincrement())
+  poza           String    
+  matingDate     DateTime? 
+  birthDate      DateTime  
+  bornAlive      Int       
+  bornDead       Int       
+  avgBirthWeight Float     
+  weaningDate    DateTime? 
+  observations   String?   
+  createdAt      DateTime  @default(now())
 
-  // CONEXIONES ESTRICTAS: Apuntan al ID único del animal en la tabla Animal
-  motherId        Int
-  mother          Animal    @relation("MotherRelation", fields: [motherId], references: [id])
+  motherId       Int
+  mother         Animal    @relation("MotherRelation", fields: [motherId], references: [id])
 
-  fatherId        Int?
-  father          Animal?   @relation("FatherRelation", fields: [fatherId], references: [id])
+  fatherId       Int?
+  father         Animal?   @relation("FatherRelation", fields: [fatherId], references: [id])
 }
