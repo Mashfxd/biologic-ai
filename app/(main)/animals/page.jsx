@@ -16,7 +16,7 @@ export default function AnimalsPage() {
 
   const [formData, setFormData] = useState({
     name: '', species: 'Cuy', breed: '', birthDate: '', 
-    gender: 'Hembra', currentWeight: '', status: 'Activo', purpose: 'Engorde', litterCode: ''
+    gender: 'HEMBRA', currentWeight: '', status: 'HEALTHY', purpose: 'Engorde', litterCode: ''
   });
 
   useEffect(() => { fetchAnimals(); }, []);
@@ -37,7 +37,7 @@ export default function AnimalsPage() {
     setEditingId(null);
     setFormData({ 
       name: '', species: 'Cuy', breed: '', birthDate: '', 
-      gender: 'Hembra', currentWeight: '', status: 'Activo', purpose: 'Engorde', litterCode: '' 
+      gender: 'HEMBRA', currentWeight: '', status: 'HEALTHY', purpose: 'Engorde', litterCode: '' 
     });
     setShowModal(true);
   };
@@ -47,8 +47,8 @@ export default function AnimalsPage() {
     setFormData({
       name: animal.name, species: animal.species, breed: animal.breed,
       birthDate: animal.birthDate ? animal.birthDate.split('T')[0] : '',
-      gender: animal.gender || 'Hembra', currentWeight: animal.currentWeight,
-      status: animal.status || 'Activo', purpose: animal.purpose || 'Engorde', litterCode: animal.litterCode || ''
+      gender: animal.gender || 'HEMBRA', currentWeight: animal.currentWeight,
+      status: animal.status || 'HEALTHY', purpose: animal.purpose || 'Engorde', litterCode: animal.litterCode || ''
     });
     setShowModal(true);
   };
@@ -86,8 +86,8 @@ export default function AnimalsPage() {
   const isAptoParaEmpadre = (gender, weight) => {
     const w = parseFloat(weight);
     if (!w) return false;
-    if (gender === 'Hembra' && w >= 800) return true;
-    if (gender === 'Macho' && w >= 900) return true;
+    if (gender === 'HEMBRA' && w >= 800) return true;
+    if (gender === 'MACHO' && w >= 900) return true;
     return false;
   };
 
@@ -208,7 +208,7 @@ export default function AnimalsPage() {
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Camada / Sexo</span>
                     <div className="flex flex-col items-end md:items-start">
                       <span className="text-sm font-semibold text-slate-700">{a.litterCode || 'Sin Camada'}</span>
-                      <span className={cn("text-xs font-bold", a.gender === 'Hembra' ? "text-pink-500" : "text-blue-500")}>{a.gender}</span>
+                      <span className={cn("text-xs font-bold", a.gender === 'HEMBRA' ? "text-pink-500" : "text-blue-500")}>{a.gender}</span>
                     </div>
                   </td>
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
@@ -221,7 +221,7 @@ export default function AnimalsPage() {
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Estado</span>
                     <div className="flex flex-col items-end md:items-start gap-1">
-                      <span className={cn("px-3 py-1 text-[10px] md:text-xs font-bold rounded-full border", a.status === 'Activo' ? "bg-emerald-50 text-emerald-700 border-emerald-100" : a.status === 'Vendido' ? "bg-blue-50 text-blue-700 border-blue-100" : "bg-rose-50 text-rose-700 border-rose-100")}>{a.status.toUpperCase()}</span>
+                      <span className={cn("px-3 py-1 text-[10px] md:text-xs font-bold rounded-full border",a.status === 'HEALTHY' ? "bg-emerald-50 text-emerald-700 border-emerald-100": a.status === 'SOLD'? "bg-blue-50 text-blue-700 border-blue-100": a.status === 'SICK'? "bg-amber-50 text-amber-700 border-amber-100": "bg-rose-50 text-rose-700 border-rose-100")}>{a.status === 'HEALTHY'? 'ACTIVO': a.status === 'SICK'? 'ENFERMO' : a.status === 'SOLD' ? 'VENDIDO': 'MORTALIDAD'}</span>
                       <span className="text-[10px] text-slate-400 font-medium uppercase">{a.purpose}</span>
                     </div>
                   </td>
@@ -276,8 +276,8 @@ export default function AnimalsPage() {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Sexo</label>
                     <select className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" value={formData.gender} onChange={e => setFormData({...formData, gender: e.target.value})}>
-                      <option value="Hembra">Hembra</option>
-                      <option value="Macho">Macho</option>
+                      <option value="HEMBRA">Hembra</option>
+                      <option value="MACHO">Macho</option>
                     </select>
                   </div>
                   <div>
@@ -295,9 +295,10 @@ export default function AnimalsPage() {
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Estado en Inventario</label>
                     <select className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
-                      <option value="Activo">🟢 Activo en Granja</option>
-                      <option value="Vendido">🔵 Vendido / Saca</option>
-                      <option value="Mortalidad">🔴 Mortalidad (Baja)</option>
+                      <option value="HEALTHY">🟢 Activo en Granja</option>
+                      <option value="SICK">🟡 Enfermo / Tratamiento</option>
+                      <option value="SOLD">🔵 Vendido / Saca</option>
+                      <option value="DECEASED">🔴 Mortalidad (Baja)</option>
                     </select>
                   </div>
                   <div>

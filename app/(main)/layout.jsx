@@ -134,7 +134,7 @@ export default function DashboardLayout({ children }) {
           <SidebarItem href="/feeding" icon={Calendar} label="Alimentación" active={pathname === '/feeding'} onClick={() => setIsMobileMenuOpen(false)} />
           <SidebarItem href="/health" icon={Stethoscope} label="Salud Animal" active={pathname === '/health'} onClick={() => setIsMobileMenuOpen(false)} />
           <SidebarItem href="/growth" icon={TrendingUp} label="Crecimiento" active={pathname === '/growth'} onClick={() => setIsMobileMenuOpen(false)} />
-          {currentUser.role === 'admin' && (
+          {currentUser.role === 'ADMIN' && (
             <SidebarItem href="/users" icon={Users} label="Usuarios y Roles" active={pathname === '/users'} onClick={() => setIsMobileMenuOpen(false)} />
           )}
         </nav>
@@ -146,7 +146,7 @@ export default function DashboardLayout({ children }) {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-bold text-slate-800 dark:text-white truncate">{currentUser.username}</p>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold">{currentUser.role === 'admin' ? 'Administrador' : 'Operador'}</p>
+              <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold">{currentUser.role === 'ADMIN' ? 'Administrador' : 'Operador'}</p>
             </div>
           </div>
           <button onClick={handleLogout} className="mt-2 flex items-center w-full gap-2 px-3 py-1.5 text-[10px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-md transition-all uppercase">

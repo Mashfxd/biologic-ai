@@ -1,7 +1,23 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { requireAdmin } from '@/lib/auth';
+
+const createUserSchema = z.object({
+  username: z.string().trim().min(3, 'El usuario debe tener al menos 3 caracteres'),
+  email: z.string().trim().email('Email inválido'),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
+  role: z.enum(['ADMIN', 'OPERATOR']).default('OPERATOR'),
+});
+
+const updateUserSchema = z.object({
+  id: z.coerce.number().int().positive('ID inválido'),
+  username: z.string().trim().min(3, 'El usuario debe tener al menos 3 caracteres'),
+  email: z.string().trim().email('Email inválido'),
+  role: z.enum(['ADMIN', 'OPERATOR']),
+  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional().or(z.literal('')),
+});
 
 export async function GET() {
   const { response } = await requireAdmin();
@@ -15,6 +31,8 @@ export async function GET() {
 
     return NextResponse.json(users);
   } catch (error) {
+    console.error('Error al obtener usuarios:', error);
+
     return NextResponse.json(
       { error: 'Error al obtener usuarios' },
       { status: 500 }
@@ -28,23 +46,19 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const { username, email, password, role } = body;
+    const parsed = createUserSchema.safeParse(body);
 
-    if (!username || !email || !password) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'Faltan campos obligatorios' },
+        {
+          error: 'Datos inválidos',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
-    const normalizedRole = role || 'operator';
-
-    if (!['admin', 'operator'].includes(normalizedRole)) {
-      return NextResponse.json(
-        { error: 'Rol inválido' },
-        { status: 400 }
-      );
-    }
+    const { username, email, password, role } = parsed.data;
 
     const existingUser = await prisma.user.findFirst({
       where: {
@@ -66,7 +80,7 @@ export async function POST(req) {
         username,
         email,
         password: hashedPassword,
-        role: normalizedRole,
+        role,
       },
     });
 
@@ -136,30 +150,19 @@ export async function PUT(req) {
 
   try {
     const body = await req.json();
-    const { id, username, email, role, password } = body;
+    const parsed = updateUserSchema.safeParse(body);
 
-    const userId = Number(id);
-
-    if (!userId || Number.isNaN(userId)) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'ID inválido' },
+        {
+          error: 'Datos inválidos',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
-    if (!username || !email || !role) {
-      return NextResponse.json(
-        { error: 'Faltan campos obligatorios' },
-        { status: 400 }
-      );
-    }
-
-    if (!['admin', 'operator'].includes(role)) {
-      return NextResponse.json(
-        { error: 'Rol inválido' },
-        { status: 400 }
-      );
-    }
+    const { id, username, email, role, password } = parsed.data;
 
     const updateData = {
       username,
@@ -172,7 +175,7 @@ export async function PUT(req) {
     }
 
     const updatedUser = await prisma.user.update({
-      where: { id: userId },
+      where: { id },
       data: updateData,
       select: {
         id: true,

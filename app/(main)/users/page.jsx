@@ -15,14 +15,14 @@ export default function UsersPage() {
       const stored = localStorage.getItem('zooai_user');
       if (stored) {
         const user = JSON.parse(stored);
-        return user.role?.toLowerCase() || 'operator';
+        return user.role?.toLowerCase() || 'OPERATOR';
       }
     }
-    return 'operator';
+    return 'OPERATOR';
   });
 
   const [formData, setFormData] = useState({
-    username: '', email: '', password: '', role: 'operator'
+    username: '', email: '', password: '', role: 'OPERATOR'
   });
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function UsersPage() {
 
   const handleOpenNewUserModal = () => {
     setEditingId(null);
-    setFormData({ username: '', email: '', password: '', role: 'operator' });
+    setFormData({ username: '', email: '', password: '', role: 'OPERATOR' });
     setShowModal(true);
   };
 
@@ -146,8 +146,8 @@ export default function UsersPage() {
                   {/* Celda Rol */}
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Rol</span>
-                    <span className={cn("px-3 py-1 text-[10px] md:text-xs font-bold rounded-full uppercase border", user.role === 'admin' ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-blue-50 text-blue-700 border-blue-100")}>
-                      {user.role === 'admin' ? 'Administrador' : 'Operador'}
+                    <span className={cn("px-3 py-1 text-[10px] md:text-xs font-bold rounded-full uppercase border", user.role === 'ADMIN' ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-blue-50 text-blue-700 border-blue-100")}>
+                      {user.role === 'ADMIN' ? 'Administrador' : 'Operador'}
                     </span>
                   </td>
 
@@ -155,7 +155,7 @@ export default function UsersPage() {
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell pt-1 md:pt-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Acciones</span>
                     <div className="flex justify-end gap-2 md:gap-3">
-                      {String(currentUserRole).includes('admin') ? (
+                      {String(currentUserRole).includes('ADMIN') ? (
                         <>
                           <button onClick={() => handleEditClick(user)} className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-blue-600 rounded-lg transition-colors border border-slate-200 md:border-none"><Edit size={16} /></button>
                           <button onClick={() => handleDeleteClick(user.id, user.username)} className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-red-600 rounded-lg transition-colors border border-slate-200 md:border-none"><Trash2 size={16} /></button>
@@ -204,8 +204,8 @@ export default function UsersPage() {
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Rol en el Sistema</label>
                   <select className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" value={formData.role} onChange={e => setFormData({...formData, role: e.target.value})}>
-                    <option value="operator">Operador (Solo registros)</option>
-                    <option value="admin">Administrador (Acceso total)</option>
+                    <option value="OPERATOR">Operador (Solo registros)</option>
+                    <option value="ADMIN">Administrador (Acceso total)</option>
                   </select>
                 </div>
                 <div className="pt-4 flex flex-col sm:flex-row justify-end gap-2">

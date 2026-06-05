@@ -1,46 +1,27 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 
-function validateAnimalData(data) {
-  const requiredFields = [
-    'name',
-    'species',
-    'breed',
-    'birthDate',
-    'gender',
-    'status',
-    'currentWeight',
-  ];
-
-  for (const field of requiredFields) {
-    if (
-      data[field] === undefined ||
-      data[field] === null ||
-      data[field] === ''
-    ) {
-      return `El campo ${field} es obligatorio`;
-    }
-  }
-
-  const weight = Number(data.currentWeight);
-
-  if (Number.isNaN(weight) || weight <= 0) {
-    return 'El peso debe ser un número mayor a 0';
-  }
-
-  const birthDate = new Date(data.birthDate);
-
-  if (Number.isNaN(birthDate.getTime())) {
-    return 'La fecha de nacimiento no es válida';
-  }
-
-  if (!['Hembra', 'Macho'].includes(data.gender)) {
-    return 'El sexo debe ser Hembra o Macho';
-  }
-
-  return null;
-}
+const animalSchema = z.object({
+  name: z.string().trim().min(1, 'El código o nombre es obligatorio'),
+  species: z.string().trim().min(1, 'La especie es obligatoria'),
+  breed: z.string().trim().min(1, 'La raza es obligatoria'),
+  birthDate: z.coerce.date({
+    message: 'La fecha de nacimiento no es válida',
+  }),
+  gender: z.enum(['HEMBRA', 'MACHO'], {
+    message: 'El sexo debe ser HEMBRA o MACHO',
+  }),
+  status: z.enum(['HEALTHY', 'SICK', 'SOLD', 'DECEASED'], {
+    message: 'El estado no es válido',
+  }),
+  purpose: z.string().trim().optional().default('Engorde'),
+  litterCode: z.string().trim().optional().nullable(),
+  currentWeight: z.coerce
+    .number()
+    .positive('El peso debe ser mayor a 0'),
+});
 
 export async function GET() {
   const { response } = await requireAuth();
@@ -67,28 +48,32 @@ export async function POST(req) {
   if (response) return response;
 
   try {
-    const data = await req.json();
+    const body = await req.json();
+    const parsed = animalSchema.safeParse(body);
 
-    const validationError = validateAnimalData(data);
-
-    if (validationError) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: validationError },
+        {
+          error: 'Datos inválidos',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
+
+    const data = parsed.data;
 
     const newAnimal = await prisma.animal.create({
       data: {
         name: data.name,
         species: data.species,
         breed: data.breed,
-        birthDate: new Date(data.birthDate),
+        birthDate: data.birthDate,
         gender: data.gender,
         status: data.status,
         purpose: data.purpose || 'Engorde',
         litterCode: data.litterCode || null,
-        currentWeight: Number(data.currentWeight),
+        currentWeight: data.currentWeight,
       },
     });
 
@@ -108,8 +93,8 @@ export async function PUT(req) {
   if (response) return response;
 
   try {
-    const data = await req.json();
-    const id = Number(data.id);
+    const body = await req.json();
+    const id = Number(body.id);
 
     if (!id || Number.isNaN(id)) {
       return NextResponse.json(
@@ -118,14 +103,19 @@ export async function PUT(req) {
       );
     }
 
-    const validationError = validateAnimalData(data);
+    const parsed = animalSchema.safeParse(body);
 
-    if (validationError) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: validationError },
+        {
+          error: 'Datos inválidos',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
+
+    const data = parsed.data;
 
     const updatedAnimal = await prisma.animal.update({
       where: { id },
@@ -133,12 +123,12 @@ export async function PUT(req) {
         name: data.name,
         species: data.species,
         breed: data.breed,
-        birthDate: new Date(data.birthDate),
+        birthDate: data.birthDate,
         gender: data.gender,
         status: data.status,
         purpose: data.purpose || 'Engorde',
         litterCode: data.litterCode || null,
-        currentWeight: Number(data.currentWeight),
+        currentWeight: data.currentWeight,
       },
     });
 
