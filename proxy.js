@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from './lib/auth';
 
-export async function middleware(request) {
+export async function proxy(request) {
   // 1. Intentar obtener la cookie de la sesión
   const token = request.cookies.get('zooai_session')?.value;
 
