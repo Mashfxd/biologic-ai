@@ -55,7 +55,7 @@ export default function LoginPage() {
       });
 
       if (res.ok) {
-        const user = await res.json();
+        const data = await res.json();
         localStorage.setItem('zooai_user', JSON.stringify(data.user));
         router.push('/dashboard'); 
       } else {
