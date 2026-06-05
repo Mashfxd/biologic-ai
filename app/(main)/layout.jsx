@@ -64,9 +64,17 @@ export default function DashboardLayout({ children }) {
     else setCurrentUser(JSON.parse(savedUser));
   }, [router]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('zooai_user');
-    router.push('/');
+  const handleLogout = async () => {
+    try {
+      // 1. Avisamos al servidor que destruya la cookie segura
+      await fetch('/api/users/logout', { method: 'POST' });
+    } catch (error) {
+      console.error("Error al cerrar sesión", error);
+    } finally {
+      // 2. Borramos el nombre estético y lo mandamos al inicio
+      localStorage.removeItem('zooai_user');
+      router.push('/');
+    }
   };
 
   const handleReport = () => {
