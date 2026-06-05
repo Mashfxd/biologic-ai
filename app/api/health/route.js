@@ -1,60 +1,37 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-
-export async function GET() {
-  try {
-    const records = await prisma.healthLog.findMany({
-      include: { animal: true },
-      orderBy: { date: 'desc' }
-    });
-    return NextResponse.json(records || []);
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+import { healthLogSchema } from '@/lib/validations'; // <-- Importamos Zod
 
 export async function POST(req) {
   try {
     const body = await req.json();
+
+    // 1. Zod revisa los datos antes de hacer nada
+    const validation = healthLogSchema.safeParse(body);
+
+    // 2. Si falla, devolvemos un error 400 (Bad Request) con el motivo exacto
+    if (!validation.success) {
+      // Extraemos el primer mensaje de error para mostrarlo en pantalla
+      const errorMessage = validation.error.errors[0].message;
+      return NextResponse.json({ error: errorMessage }, { status: 400 });
+    }
+
+    // 3. Si pasa la validación, validation.data contiene los datos limpios y tipados
+    const cleanData = validation.data;
+
     const record = await prisma.healthLog.create({
       data: {
-        animal_id: parseInt(body.animal_id),
-        diagnostic: body.diagnostic,
-        treatment: body.treatment,
-        date: new Date(body.date)
+        animal_id: cleanData.animal_id,
+        diagnostic: cleanData.diagnostic,
+        treatment: cleanData.treatment,
+        date: cleanData.date // Zod ya lo convirtió a formato Date
       }
     });
-    return NextResponse.json(record);
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
 
-export async function PUT(req) {
-  try {
-    const body = await req.json();
-    const record = await prisma.healthLog.update({
-      where: { id: parseInt(body.id) },
-      data: {
-        animal_id: parseInt(body.animal_id),
-        diagnostic: body.diagnostic,
-        treatment: body.treatment,
-        date: new Date(body.date)
-      }
-    });
-    return NextResponse.json(record);
-  } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+    return NextResponse.json(record, { status: 201 });
 
-export async function DELETE(req) {
-  try {
-    const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
-    await prisma.healthLog.delete({ where: { id: parseInt(id) } });
-    return NextResponse.json({ message: "Eliminado" });
   } catch (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error("Error en Health API:", error);
+    return NextResponse.json({ error: "Error interno del servidor" }, { status: 500 });
   }
 }
