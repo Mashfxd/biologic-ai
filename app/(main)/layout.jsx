@@ -59,9 +59,28 @@ export default function DashboardLayout({ children }) {
 
   // 4. Validar Sesión
   useEffect(() => {
-    const savedUser = localStorage.getItem('zooai_user');
-    if (!savedUser) router.push('/'); 
-    else setCurrentUser(JSON.parse(savedUser));
+    const loadCurrentUser = async () => {
+    try {
+      const res = await fetch('/api/users/me');
+
+      if (!res.ok) {
+        localStorage.removeItem('zooai_user');
+        router.push('/');
+        return;
+      }
+
+      const data = await res.json();
+
+      setCurrentUser(data.user);
+      localStorage.setItem('zooai_user', JSON.stringify(data.user));
+    } catch (error) {
+      console.error('Error al validar sesión:', error);
+      localStorage.removeItem('zooai_user');
+      router.push('/');
+    }
+  };
+
+  loadCurrentUser();
   }, [router]);
 
   const handleLogout = async () => {

@@ -56,7 +56,7 @@ export default function LoginPage() {
 
       if (res.ok) {
         const user = await res.json();
-        localStorage.setItem('zooai_user', JSON.stringify(user));
+        localStorage.setItem('zooai_user', JSON.stringify(data.user));
         router.push('/dashboard'); 
       } else {
         alert('Credenciales inválidas.');
