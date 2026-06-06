@@ -68,16 +68,22 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-300">
+    <main className="relative flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900 font-sans transition-colors duration-300">
       
       {/* BOTÓN MODO OSCURO EN LA ESQUINA */}
-      <button 
-        onClick={toggleTheme}
-        className="absolute top-6 right-6 p-3 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors"
-        title="Cambiar Modo"
-      >
-        {isDarkMode ? <Sun size={24} className="text-amber-400" /> : <Moon size={24} />}
-      </button>
+      <button
+  type="button"
+  onClick={toggleTheme}
+  aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+  aria-pressed={isDarkMode}
+  className="absolute top-6 right-6 p-3 text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-full transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+>
+  {isDarkMode ? (
+    <Sun size={24} className="text-amber-400" aria-hidden="true" focusable="false" />
+  ) : (
+    <Moon size={24} aria-hidden="true" focusable="false" />
+  )}
+</button>
 
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md px-4">
         {/* Usamos dark:bg-slate-950 para que la tarjeta también se oscurezca */}
@@ -97,9 +103,10 @@ export default function LoginPage() {
           
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">Usuario</label>
+              <label htmlFor="username" className="block mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">Usuario</label>
               {/* CORRECCIÓN: bg-white text-slate-900 para modo claro | dark:bg-slate-900 dark:text-white para oscuro */}
               <input 
+                id="username"
                 name="username" 
                 type="text" 
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium placeholder-slate-400" 
@@ -108,9 +115,11 @@ export default function LoginPage() {
               />
             </div>
             <div>
-              <label className="block mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">Contraseña</label>
+              
+              <label htmlFor="password" className="block mb-1 text-sm font-semibold text-slate-700 dark:text-slate-300">Contraseña</label>
               {/* CORRECCIÓN APLICADA AQUÍ TAMBIÉN */}
               <input 
+                id="password"
                 name="password" 
                 type="password" 
                 className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all font-medium placeholder-slate-400" 
@@ -124,6 +133,6 @@ export default function LoginPage() {
           </form>
         </Card>
       </motion.div>
-    </div>
+    </main>
   );
 }

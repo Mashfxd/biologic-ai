@@ -1,6 +1,6 @@
 "use client";
 import { PlusCircle, Shield, User as UserIcon, X, Edit, Trash2 } from 'lucide-react';
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useRef} from 'react';
 import Card from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 
@@ -9,6 +9,27 @@ export default function UsersPage() {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  
+  const userModalTitleId = editingId ? 'editar-usuario-title' : 'nuevo-usuario-title';
+  const firstUserModalFieldRef = useRef(null);
+
+useEffect(() => {
+  if (!showModal) return;
+
+  firstUserModalFieldRef.current?.focus();
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      setShowModal(false);
+    }
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, [showModal]);
 
   const [currentUserRole, setCurrentUserRole] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -95,12 +116,14 @@ export default function UsersPage() {
             <h3 className="text-xl font-bold text-slate-800">Gestión de Usuarios</h3>
             <p className="text-sm text-slate-500 font-medium">Administra los accesos del sistema</p>
           </div>
-          <button 
-            onClick={handleOpenNewUserModal}
-            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-sm"
-          >
-            <PlusCircle size={20} /> Nuevo Usuario
-          </button>
+          <button
+  type="button"
+  onClick={handleOpenNewUserModal}
+  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+>
+  <PlusCircle size={20} aria-hidden="true" focusable="false" />
+  Nuevo Usuario
+</button>
         </div>
         
         {/* LA NUEVA TABLA TRANSFORMABLE (Sin overflow-x, full Card View en Móvil) */}
@@ -157,8 +180,22 @@ export default function UsersPage() {
                     <div className="flex justify-end gap-2 md:gap-3">
                       {String(currentUserRole).includes('ADMIN') ? (
                         <>
-                          <button onClick={() => handleEditClick(user)} className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-blue-600 rounded-lg transition-colors border border-slate-200 md:border-none"><Edit size={16} /></button>
-                          <button onClick={() => handleDeleteClick(user.id, user.username)} className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-red-600 rounded-lg transition-colors border border-slate-200 md:border-none"><Trash2 size={16} /></button>
+                          <button
+  type="button"
+  onClick={() => handleEditClick(user)}
+  aria-label={`Editar usuario ${user.username}`}
+  className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-blue-600 rounded-lg transition-colors border border-slate-200 md:border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+>
+  <Edit size={16} aria-hidden="true" focusable="false" />
+</button>
+                          <button
+  type="button"
+  onClick={() => handleDeleteClick(user.id, user.username)}
+  aria-label={`Eliminar usuario ${user.username}`}
+  className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-red-600 rounded-lg transition-colors border border-slate-200 md:border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+>
+  <Trash2 size={16} aria-hidden="true" focusable="false" />
+</button>
                         </>
                       ) : (
                         <span className="text-[10px] text-slate-400 italic bg-slate-50 px-2 py-1 rounded">Limitado</span>
@@ -179,17 +216,19 @@ export default function UsersPage() {
 
       {/* MODAL (Se mantiene igual, ya lo habíamos optimizado) */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4" role="presentation">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col" role="dialog" aria-labelledby={userModalTitleId} aria-modal="true" >
             <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-white shrink-0">
-              <h3 className="font-bold text-lg text-slate-800">{editingId ? 'Editar Usuario' : 'Registrar Nuevo Usuario'}</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:bg-slate-100 p-1 rounded-md transition-colors"><X size={20} /></button>
+              <h3 id={userModalTitleId} className="font-bold text-lg text-slate-800">{editingId ? 'Editar Usuario' : 'Registrar Nuevo Usuario'}</h3>
+              <button type="button" onClick={() => setShowModal(false)}  className="text-slate-400 hover:bg-slate-100 p-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="Cerrar modal">
+                <X size={20} aria-hidden="true" focusable="false" />
+              </button>
             </div>
             <div className="overflow-y-auto p-5">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Usuario</label>
-                  <input required type="text" className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '')})} />
+                  <input ref={firstUserModalFieldRef} required type="text" className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" value={formData.username} onChange={e => setFormData({...formData, username: e.target.value.toLowerCase().replace(/\s/g, '')})} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Email</label>

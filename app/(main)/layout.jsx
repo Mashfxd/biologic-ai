@@ -11,11 +11,18 @@ import {
 import { cn } from '@/lib/utils';
 
 const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
-  <Link href={href} onClick={onClick} className={cn(
-    "flex items-center w-full gap-3 px-3 py-2 text-sm font-medium transition-all duration-150 rounded-md",
-    active ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400" : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-  )}>
-    <Icon size={18} />
+  <Link
+    href={href}
+    onClick={onClick}
+    aria-current={active ? 'page' : undefined}
+    className={cn(
+      "flex items-center w-full gap-3 px-3 py-2 text-sm font-medium transition-all duration-150 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
+      active
+        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
+        : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+    )}
+  >
+    <Icon size={18} aria-hidden="true" focusable="false" />
     <span>{label}</span>
   </Link>
 );
@@ -104,6 +111,7 @@ export default function DashboardLayout({ children }) {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans overflow-hidden transition-colors duration-300">
+      <a href="#contenido-principal" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:text-slate-900 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">Saltar al contenido principal</a>
       
       {/* OVERLAY MÓVIL (Fondo oscuro al abrir menú en celular) */}
       {isMobileMenuOpen && (
@@ -111,7 +119,7 @@ export default function DashboardLayout({ children }) {
       )}
 
       {/* SIDEBAR MODO CLARO / OSCURO */}
-      <aside className={cn(
+      <aside   id="sidebar-principal" aria-label="Navegación principal" className={cn(
         "fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
         isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
       )}>
@@ -122,12 +130,12 @@ export default function DashboardLayout({ children }) {
             </div>
             <span className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">BioLogic AI</span>
           </div>
-          <button onClick={() => setIsMobileMenuOpen(false)} className="lg:hidden text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-md">
-            <X size={20} />
-          </button>
+          <button type='button' onClick={() => setIsMobileMenuOpen(false)} aria-label="Cerrar menú" className="lg:hidden text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+           <X size={20} aria-hidden="true" focusable="false" />
+</button>
         </div>
 
-        <nav className="flex-1 px-4 space-y-1 overflow-y-auto pb-4 print:hidden">
+        <nav aria-label="Menú principal" className="flex-1 px-4 space-y-1 overflow-y-auto pb-4 print:hidden">
           <SidebarItem href="/dashboard" icon={LayoutDashboard} label="Dashboard" active={pathname === '/dashboard'} onClick={() => setIsMobileMenuOpen(false)} />
           <SidebarItem href="/animals" icon={ClipboardList} label="Inventario" active={pathname === '/animals'} onClick={() => setIsMobileMenuOpen(false)} />
           <SidebarItem href="/production" icon={BarChart3} label="Producción" active={pathname === '/production'} onClick={() => setIsMobileMenuOpen(false)} />
@@ -155,12 +163,12 @@ export default function DashboardLayout({ children }) {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col overflow-hidden w-full relative">
+      <main id="contenido-principal" className="flex-1 flex flex-col overflow-hidden w-full relative">
         <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 shrink-0 print:hidden transition-colors duration-300">
           <div className="flex items-center gap-2 lg:gap-4 flex-1">
-            <button onClick={() => setIsMobileMenuOpen(true)} className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg lg:hidden">
-              <Menu size={24} />
-            </button>
+            <button type="button" onClick={() => setIsMobileMenuOpen(true)} aria-label="Abrir menú" aria-expanded={isMobileMenuOpen} aria-controls="sidebar-principal" className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg lg:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+  <Menu size={24} aria-hidden="true" focusable="false" />
+</button>
             <div className="hidden sm:flex items-center gap-4 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-full w-full max-w-sm">
               <LayoutDashboard size={14} className="text-slate-400" />
               <input type="text" placeholder="Buscar lote o alerta..." className="bg-transparent border-none text-[12px] w-full outline-none text-slate-600 dark:text-slate-300 font-medium placeholder-slate-400" />
@@ -170,27 +178,39 @@ export default function DashboardLayout({ children }) {
           <div className="flex items-center gap-2 lg:gap-4 relative">
             
             {/* BOTÓN DE MODO OSCURO */}
-            <button 
-              onClick={toggleTheme} 
-              className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-              title="Alternar Modo Oscuro"
-            >
-              {isDarkMode ? <Sun size={20} className="text-amber-400" /> : <Moon size={20} />}
-            </button>
+            <button
+               type="button"
+               onClick={toggleTheme}
+               aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+               aria-pressed={isDarkMode}
+               className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+             >
+             {isDarkMode ? (
+              <Sun size={20} className="text-amber-400" aria-hidden="true" focusable="false" />
+              ) : (
+              <Moon size={20} aria-hidden="true" focusable="false" />
+              )}
+             </button>
 
             {/* BOTÓN REPORTE */}
-            <button onClick={handleReport} className="hidden md:flex items-center gap-2 bg-emerald-600 text-white text-[11px] font-bold px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors shadow-sm">
-              <Download size={14} /> Reporte PDF
-            </button>
+            <button
+              type="button"
+              onClick={handleReport}
+              className="hidden md:flex items-center gap-2 bg-emerald-600 text-white text-[11px] font-bold px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
+              <Download size={14} aria-hidden="true" focusable="false" />
+             Reporte PDF
+             </button>
 
             {/* CAMPANITA DE NOTIFICACIONES */}
             <div className="relative">
-              <button 
-                onClick={() => setShowNotifications(!showNotifications)} 
-                className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg relative transition-colors"
-              >
-                <Bell size={20} />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-950 animate-pulse"></span>
+              <button
+               type="button"
+               onClick={() => setShowNotifications(!showNotifications)}
+               aria-label="Ver notificaciones"
+               aria-expanded={showNotifications}
+               aria-controls="panel-notificaciones"
+               className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg relative transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+>
               </button>
 
               {/* LÓGICA DE NOTIFICACIONES CON CIERRE AL CLIC AFUERA */}
@@ -203,7 +223,7 @@ export default function DashboardLayout({ children }) {
                   ></div>
 
                   {/* Panel del Menú */}
-                  <div className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden">
+                  <div id="panel-notificaciones" className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden">
                     <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">Notificaciones</h4>
                       <span className="text-[10px] bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 px-2 py-0.5 rounded-full font-bold">2 Nuevas</span>

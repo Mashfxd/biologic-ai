@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect ,useRef} from 'react';
 import { PlusCircle, PawPrint, X, Edit, Trash2, Heart, Bell } from 'lucide-react'; // Agregamos Bell (Campana)
 import { cn } from '@/lib/utils';
 import Card from '@/components/ui/Card';
@@ -9,6 +9,27 @@ export default function AnimalsPage() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+const modalTitleId = editingId ? 'editar-animal-title' : 'nuevo-animal-title';
+const firstModalFieldRef = useRef(null);
+
+useEffect(() => {
+  if (!showModal) return;
+
+  firstModalFieldRef.current?.focus();
+
+  const handleKeyDown = (event) => {
+    if (event.key === 'Escape') {
+      setShowModal(false);
+    }
+  };
+
+  document.addEventListener('keydown', handleKeyDown);
+
+  return () => {
+    document.removeEventListener('keydown', handleKeyDown);
+  };
+}, [showModal]);
 
   // ESTADO PARA ALERTAS
   const [showNotifications, setShowNotifications] = useState(false);
@@ -20,6 +41,8 @@ export default function AnimalsPage() {
   });
 
   useEffect(() => { fetchAnimals(); }, []);
+  
+  
 
   const fetchAnimals = async () => {
     setLoading(true);
@@ -113,10 +136,14 @@ export default function AnimalsPage() {
             {/* CAMPANITA DE NOTIFICACIONES */}
             <div className="relative">
               <button 
+                type="button"
                 onClick={() => setShowNotifications(!showNotifications)}
-                className="p-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm relative flex items-center justify-center"
-              >
-                <Bell size={20} />
+                aria-label={`Ver alertas de empadre. ${alertasEmpadre.length} alertas nuevas`}
+                aria-expanded={showNotifications}
+                aria-controls="panel-alertas-empadre"
+                className="p-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm relative flex items-center justify-center focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+>
+               <Bell size={20} aria-hidden="true" focusable="false" />
                 {alertasEmpadre.length > 0 && (
                   <span className="absolute -top-2 -right-2 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full border-2 border-white shadow-sm animate-pulse">
                     {alertasEmpadre.length}
@@ -126,7 +153,7 @@ export default function AnimalsPage() {
 
               {/* PANEL DESPLEGABLE DE ALERTAS */}
               {showNotifications && (
-                <div className="absolute right-0 mt-3 w-80 bg-white border border-slate-100 shadow-xl rounded-2xl z-50 overflow-hidden">
+                <div id="panel-alertas-empadre" className="absolute right-0 mt-3 w-80 bg-white border border-slate-100 shadow-xl rounded-2xl z-50 overflow-hidden">
                   <div className="p-4 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
                     <h4 className="font-bold text-slate-800 text-sm">Alertas de Empadre</h4>
                     {alertasEmpadre.length > 0 && (
@@ -168,12 +195,14 @@ export default function AnimalsPage() {
             </div>
 
             {/* BOTÓN NUEVO ANIMAL */}
-            <button 
-              onClick={handleOpenNewModal}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-sm"
-            >
-              <PlusCircle size={20} /> Nuevo Animal
-            </button>
+           <button
+  type="button"
+  onClick={handleOpenNewModal}
+  className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+>
+  <PlusCircle size={20} aria-hidden="true" focusable="false" />
+  Nuevo Animal
+</button>
           </div>
         </div>
         
@@ -228,8 +257,8 @@ export default function AnimalsPage() {
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell pt-1 md:pt-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Acciones</span>
                     <div className="flex justify-end gap-2 md:gap-3">
-                      <button onClick={() => handleEditClick(a)} className="p-2 bg-slate-50 md:bg-transparent text-slate-400 hover:text-blue-600 rounded-lg transition-colors border border-slate-200 md:border-none"><Edit size={16} /></button>
-                      <button onClick={() => handleDeleteClick(a.id, a.name)} className="p-2 bg-slate-50 md:bg-transparent text-slate-400 hover:text-red-600 rounded-lg transition-colors border border-slate-200 md:border-none"><Trash2 size={16} /></button>
+                      <button type="button" onClick={() => handleEditClick(a)} aria-label="Editar" className="p-2 bg-slate-50 md:bg-transparent text-slate-400 hover:text-blue-600 rounded-lg transition-colors border border-slate-200 md:border-none"><Edit size={16} /></button>
+                      <button type="button" onClick={() => handleDeleteClick(a.id, a.name)} aria-label="Eliminar" className="p-2 bg-slate-50 md:bg-transparent text-slate-400 hover:text-red-600 rounded-lg transition-colors border border-slate-200 md:border-none"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -241,18 +270,25 @@ export default function AnimalsPage() {
 
       {/* MODAL DE REGISTRO */}
       {showModal && (
-        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[60] p-4">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col">
+        <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[60] p-4" role="presentation">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col" role="dialog" arial-mode="true" aria-labelledby={modalTitleId}>
             <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-white shrink-0">
-              <h3 className="font-bold text-lg text-slate-800">{editingId ? 'Editar Registro' : 'Registrar Nuevo Animal'}</h3>
-              <button onClick={() => setShowModal(false)} className="text-slate-400 hover:bg-slate-100 p-1 rounded-md transition-colors"><X size={20} /></button>
+              <h3 id={modalTitleId} className="font-bold text-lg text-slate-800">{editingId ? 'Editar Registro' : 'Registrar Nuevo Animal'}</h3>
+              <button
+  type="button"
+  onClick={() => setShowModal(false)}
+  aria-label="Cerrar modal de animal"
+  className="text-slate-400 hover:bg-slate-100 p-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+>
+  <X size={20} aria-hidden="true" focusable="false" />
+</button>
             </div>
             <div className="overflow-y-auto p-5">
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">ID / Código Identificador</label>
-                    <input required type="text" className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" placeholder="Ej: LOTE-A-01" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+                    <input ref={firstModalFieldRef} required type="text" className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" placeholder="Ej: LOTE-A-01" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Especie</label>
