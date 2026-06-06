@@ -51,7 +51,25 @@ export default function DashboardPage() {
   }
 
   // Prevenir crasheos si la API no devuelve datos
-  if (!metrics) return null;
+  if (!metrics) {
+  return (
+    <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
+      <h2 className="text-lg font-bold text-slate-800 dark:text-white">
+        No se pudieron cargar las métricas
+      </h2>
+      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+        Revisa la API de métricas o vuelve a intentarlo.
+      </p>
+      <button
+        type="button"
+        onClick={fetchMetrics}
+        className="mt-4 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+      >
+        Reintentar
+      </button>
+    </div>
+  );
+}
 
   return (
     <div className="grid gap-4 md:gap-6 animate-in fade-in duration-500">
@@ -139,7 +157,7 @@ export default function DashboardPage() {
                     <div>
                       <p className="text-[11px] font-bold text-slate-800 dark:text-red-200 uppercase">{alerta.diagnostic}</p>
                       <p className="text-[10px] text-slate-600 dark:text-red-300/80 font-medium mt-0.5">
-                        Animal #{alerta.animal?.code || 'Desconocido'} - {new Date(alerta.date).toLocaleDateString()}
+                        Animal: {alerta.animal?.name || 'Desconocido'} - {new Date(alerta.date).toLocaleDateString()}
                       </p>
                     </div>
                   </div>

@@ -25,7 +25,7 @@ export async function GET() {
     const recentAlerts = await prisma.healthLog.findMany({
       take: 5,
       orderBy: { date: 'desc' },
-      include: { animal: { select: { code: true, name: true } } }
+      include: { animal: { select: { id: true, code: true, name: true, litterCode: true } } }
     });
 
     // 5. Construimos el JSON de respuesta con cálculos seguros

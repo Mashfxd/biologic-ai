@@ -209,8 +209,9 @@ export default function DashboardLayout({ children }) {
                aria-label="Ver notificaciones"
                aria-expanded={showNotifications}
                aria-controls="panel-notificaciones"
-               className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg relative transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
->
+               className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg relative transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">             
+               <Bell size={20} aria-hidden="true" focusable="false" />
+               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-950 animate-pulse" />
               </button>
 
               {/* LÓGICA DE NOTIFICACIONES CON CIERRE AL CLIC AFUERA */}
