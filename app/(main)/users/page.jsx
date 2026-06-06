@@ -36,7 +36,7 @@ useEffect(() => {
       const stored = localStorage.getItem('zooai_user');
       if (stored) {
         const user = JSON.parse(stored);
-        return user.role?.toLowerCase() || 'OPERATOR';
+        return user.role?.toUpperCase() || 'OPERATOR';
       }
     }
     return 'OPERATOR';
@@ -51,7 +51,7 @@ useEffect(() => {
     const storedUser = localStorage.getItem('zooai_user');
     if (storedUser) {
       const user = JSON.parse(storedUser);
-      setCurrentUserRole(String(user.role || "").trim().toLowerCase());
+      setCurrentUserRole(String(user.role || "").trim().toUpperCase());
     }
   }, []);
 

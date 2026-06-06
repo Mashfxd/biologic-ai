@@ -271,7 +271,7 @@ useEffect(() => {
       {/* MODAL DE REGISTRO */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-[60] p-4" role="presentation">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col" role="dialog" arial-mode="true" aria-labelledby={modalTitleId}>
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden max-h-[90vh] flex flex-col" role="dialog" arial-modal="true" aria-labelledby={modalTitleId}>
             <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-white shrink-0">
               <h3 id={modalTitleId} className="font-bold text-lg text-slate-800">{editingId ? 'Editar Registro' : 'Registrar Nuevo Animal'}</h3>
               <button
