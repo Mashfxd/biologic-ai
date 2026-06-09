@@ -100,7 +100,7 @@ export default function DashboardPage() {
         <StatCard 
           icon={Weight} 
           label="Peso Promedio (PN)" 
-          value={`${metrics.produccion.pesoPromedioNacimiento} g`} 
+          value={`${metrics.pesoPromedioActual} g`} 
           color="bg-amber-500" 
         />
         <StatCard 

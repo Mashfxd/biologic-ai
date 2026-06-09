@@ -224,7 +224,7 @@ export default function DashboardLayout({ children }) {
                   ></div>
 
                   {/* Panel del Menú */}
-                  <div id="panel-notificaciones" className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden">
+                  <div id="panel-notificaciones" role="region" aria-label='Notificaciones' className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden">
                     <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">Notificaciones</h4>
                       <span className="text-[10px] bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 px-2 py-0.5 rounded-full font-bold">2 Nuevas</span>
