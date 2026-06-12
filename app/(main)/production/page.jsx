@@ -21,11 +21,7 @@ export default function ProductionPage() {
     birthDate: '', bornAlive: '', bornDead: '0', avgBirthWeight: '', observations: ''
   });
 
-  // Datos simulados para que la pantalla no se vea vacía en la tesis
-  const mockBirths = [
-    { id: 'mock1', poza: 'G4', motherId: '17525', fatherId: '13026', birthDate: '2026-05-06', bornAlive: 4, avgBirthWeight: 185, isMock: true },
-    { id: 'mock2', poza: 'G5', motherId: '02226', fatherId: '13126', birthDate: '2026-05-08', bornAlive: 3, avgBirthWeight: 145, isMock: true },
-  ];
+
 
   const fetchProduction = async () => {
     setIsLoading(true);
@@ -96,8 +92,8 @@ export default function ProductionPage() {
     }
   };
 
-  // Determinar qué datos mostrar (Reales de Neon, o Ejemplos si está vacío)
-  const displayData = births.length > 0 ? births : mockBirths;
+  // Determinar qué datos mostrar 
+  const displayData = births;
 
   const totalNacimientos = births.length;
   const promCrias = totalNacimientos > 0 ? (births.reduce((sum, b) => sum + b.bornAlive, 0) / totalNacimientos).toFixed(1) : "0.0";
@@ -152,13 +148,13 @@ const maleAnimals = animals.filter(
                     <input type="text" name="poza" value={formData.poza} required onChange={handleInputChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Ej. A6" />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">ID Madre *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Madre *</label>
                    <select name="motherId" value={formData.motherId} required onChange={handleInputChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"> <option value="">Seleccione madre...</option>{femaleAnimals.map((animal) => (<option key={animal.id} value={animal.id}>{animal.name} / {animal.breed} / {animal.currentWeight}g</option>))}</select>
                    {femaleAnimals.length === 0 && (<p className="mt-1 text-xs font-medium text-rose-500">No hay hembras activas registradas en inventario.</p>
 )}
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-slate-700 mb-1.5">ID Padre</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1.5">Padre</label>
                    <select
     name="fatherId"
     value={formData.fatherId}
@@ -287,8 +283,16 @@ const maleAnimals = animals.filter(
             <tbody className="block md:table-row-group divide-y-0 md:divide-y md:divide-slate-100 dark:md:divide-slate-800">
               {isLoading ? (
                 <tr>
-                  <td colSpan="5" className="py-8 text-center text-slate-500 font-medium">Cargando registros...</td>
-                </tr>
+    <td colSpan="5" className="py-8 text-center text-slate-500 font-medium">
+      Cargando registros...
+    </td>
+  </tr>
+) : filteredBirths.length === 0 ? (
+  <tr>
+    <td colSpan="5" className="py-8 text-center text-slate-500 font-medium">
+      No hay registros de producción todavía.
+    </td>
+  </tr>
               ) : filteredBirths.map((record) => (
                 <tr key={record.id} className="block md:table-row bg-white dark:bg-slate-900 md:hover:bg-slate-50 dark:md:hover:bg-slate-800/50 transition-colors border border-slate-200 dark:border-slate-800 md:border-0 rounded-xl md:rounded-none p-4 md:p-0 mb-4 md:mb-0 shadow-sm md:shadow-none">
                   
@@ -303,8 +307,8 @@ const maleAnimals = animals.filter(
                   <td className="flex md:table-cell justify-between items-center md:px-6 md:py-4 border-b border-slate-50 dark:border-slate-800 md:border-none py-2 md:py-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Madre / Padre</span>
                     <div className="flex flex-col md:items-start items-end text-right md:text-left">
-                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">M: #{record.mother?.code || record.motherId}</span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">P: {record.fatherId ? `#${record.father?.code || record.fatherId}` : 'N/A'}</span>
+                      <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400">M: {record.mother?.name || `ID ${record.motherId}`}</span>
+                      <span className="text-xs text-slate-500 dark:text-slate-400">P: {record.fatherId ? (record.father?.name || `ID ${record.fatherId}`) : 'N/A'}</span>
                     </div>
                   </td>
                   
