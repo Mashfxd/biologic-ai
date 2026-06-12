@@ -12,7 +12,13 @@ export async function POST(req) {
     // 2. Si falla, devolvemos un error 400 (Bad Request) con el motivo exacto
     if (!validation.success) {
       // Extraemos el primer mensaje de error para mostrarlo en pantalla
-      const errorMessage = validation.error.errors[0].message;
+      return NextResponse.json(
+  {
+    error: 'Datos inválidos',
+    details: validation.error.flatten().fieldErrors,
+  },
+  { status: 400 }
+);
       return NextResponse.json({ error: errorMessage }, { status: 400 });
     }
 

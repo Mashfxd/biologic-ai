@@ -95,7 +95,9 @@ export default function DashboardPage() {
           label="Animales en Tratamiento" 
           value={metrics.animalesEnfermos} 
           color="bg-rose-500" 
-          trend={`${metrics.tasaMortalidad}%`} 
+          trend={`Morbilidad ${metrics.tasaMorbilidad}%`} 
+          color="bg-purple-500" 
+          trend={`${metrics.animalesFallecidos} fallecidos`}
         />
         <StatCard 
           icon={Weight} 

@@ -58,5 +58,6 @@ export const config = {
     '/api/feeding/:path*',
     '/api/growth/:path*',
     '/api/production/:path*',
+    '/api/metrics/:path*',
   ],
 };
