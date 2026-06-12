@@ -10,6 +10,7 @@ export default function GrowthPage() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [formData, setFormData] = useState({
     animal_id: '', weight: '', date: new Date().toISOString().split('T')[0]
@@ -54,6 +55,7 @@ export default function GrowthPage() {
         date: new Date().toISOString().split('T')[0] 
       });
     }
+    setErrorMsg('');
     setShowModal(true);
   };
 
@@ -64,21 +66,42 @@ export default function GrowthPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.animal_id) return alert("Seleccione un animal.");
+  e.preventDefault();
+  setErrorMsg('');
 
+  if (!formData.animal_id) {
+    setErrorMsg('Seleccione un animal.');
+    return;
+  }
+
+  try {
     const method = editingId ? 'PUT' : 'POST';
     const body = editingId ? { ...formData, id: editingId } : formData;
+
     const res = await fetch('/api/growth', {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     });
-    if (res.ok) {
-      setShowModal(false);
-      fetchRecords();
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      const details = result.details
+        ? Object.values(result.details).flat().join(' ')
+        : '';
+
+      setErrorMsg(result.error || details || 'No se pudo guardar el pesaje.');
+      return;
     }
-  };
+
+    setShowModal(false);
+    fetchRecords();
+  } catch (error) {
+    console.error('Error al guardar crecimiento:', error);
+    setErrorMsg('Error de conexión con el servidor.');
+  }
+};
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -159,6 +182,7 @@ export default function GrowthPage() {
             </div>
             <div className="overflow-y-auto p-5">
               <form onSubmit={handleSubmit} className="space-y-4">
+                {errorMsg && (<div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-sm font-bold text-rose-700">{errorMsg}</div>)}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   
                   <div className="sm:col-span-2">

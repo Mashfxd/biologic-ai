@@ -23,23 +23,28 @@ export default function ProductionPage() {
 
 
 
-  const fetchProduction = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch('/api/production');
-      if (res.ok) {
-        const data = await res.json();
-        setBirths(data);
-      }else {
-        const data = await res.json();
-        setErrorMsg(data.error || 'No se pudo cargar producción.');
-        setBirths([]);}
-    } catch (error) {
-      console.error("Error al cargar datos:", error);
-    } finally {
-      setIsLoading(false);
+ const fetchProduction = async () => {
+  setIsLoading(true);
+
+  try {
+    const res = await fetch('/api/production');
+    const data = await res.json();
+
+    if (!res.ok) {
+      setErrorMsg(data.error || 'No se pudo cargar producción.');
+      setBirths([]);
+      return;
     }
-  };
+
+    setBirths(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.error('Error al cargar producción:', error);
+    setErrorMsg('Error de conexión al cargar producción.');
+    setBirths([]);
+  } finally {
+    setIsLoading(false);
+  }
+};
   
   const fetchAnimals = async () => {
   try {
@@ -82,12 +87,28 @@ export default function ProductionPage() {
       const result = await res.json();
 
       if (!res.ok) {
-        setErrorMsg(result.error || 'Error al guardar el registro.');
-      } else {
-        setBirths([result.data, ...births]);
-        setIsModalOpen(false);
-        setFormData({ poza: '', motherId: '', fatherId: '', matingDate: '', birthDate: '', bornAlive: '', bornDead: '0', avgBirthWeight: '', observations: '' });
-      }
+  const details = result.details
+    ? Object.values(result.details).flat().join(' ')
+    : '';
+
+  setErrorMsg(result.error || details || 'Error al guardar el registro.');
+} else {
+  setIsModalOpen(false);
+
+  setFormData({
+    poza: '',
+    motherId: '',
+    fatherId: '',
+    matingDate: '',
+    birthDate: '',
+    bornAlive: '',
+    bornDead: '0',
+    avgBirthWeight: '',
+    observations: '',
+  });
+
+  await fetchProduction();
+}
     } catch (error) {
       setErrorMsg('Error de conexión con el servidor.');
     } finally {

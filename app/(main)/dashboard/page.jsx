@@ -91,17 +91,15 @@ export default function DashboardPage() {
           trend="Real" 
         />
         <StatCard 
-          icon={Activity} 
-          label="Animales en Tratamiento" 
-          value={metrics.animalesEnfermos} 
-          color="bg-rose-500" 
-          trend={`Morbilidad ${metrics.tasaMorbilidad}%`} 
-          color="bg-purple-500" 
-          trend={`${metrics.animalesFallecidos} fallecidos`}
+           icon={Activity} 
+           label="Animales en Tratamiento" 
+           value={metrics.animalesEnfermos} 
+           color="bg-rose-500" 
+           trend={`Morbilidad ${metrics.tasaMorbilidad}%`} 
         />
         <StatCard 
           icon={Weight} 
-          label="Peso Promedio (PN)" 
+          label="Peso Promedio Actual" 
           value={`${metrics.pesoPromedioActual} g`} 
           color="bg-amber-500" 
         />

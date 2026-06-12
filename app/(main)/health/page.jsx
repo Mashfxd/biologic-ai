@@ -9,6 +9,7 @@ export default function HealthPage() {
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [errorMsg, setErrorMsg] = useState('');
 
   const [formData, setFormData] = useState({
     animal_id: '', diagnostic: '', treatment: '', date: new Date().toISOString().split('T')[0]
@@ -45,6 +46,7 @@ export default function HealthPage() {
       setEditingId(null);
       setFormData({ animal_id: animals.length > 0 ? animals[0].id : '', diagnostic: '', treatment: '', date: new Date().toISOString().split('T')[0] });
     }
+    setErrorMsg('');
     setShowModal(true);
   };
 
@@ -55,13 +57,42 @@ export default function HealthPage() {
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!formData.animal_id) return alert("Seleccione un animal.");
+  e.preventDefault();
+  setErrorMsg('');
+
+  if (!formData.animal_id) {
+    setErrorMsg('Seleccione un animal.');
+    return;
+  }
+
+  try {
     const method = editingId ? 'PUT' : 'POST';
     const body = editingId ? { ...formData, id: editingId } : formData;
-    const res = await fetch('/api/health', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    if (res.ok) { setShowModal(false); fetchRecords(); }
-  };
+
+    const res = await fetch('/api/health', {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const result = await res.json();
+
+    if (!res.ok) {
+      const details = result.details
+        ? Object.values(result.details).flat().join(' ')
+        : '';
+
+      setErrorMsg(result.error || details || 'No se pudo guardar el registro médico.');
+      return;
+    }
+
+    setShowModal(false);
+    fetchRecords();
+  } catch (error) {
+    console.error('Error al guardar salud:', error);
+    setErrorMsg('Error de conexión con el servidor.');
+  }
+};
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -106,7 +137,7 @@ export default function HealthPage() {
                     {/* Animal (Negrita Negra/Blanca) */}
                     <td className="px-6 py-4">
                       <span className="font-bold text-slate-800 dark:text-slate-200">
-                        {r.animal?.code || r.animal?.name || 'Eliminado'}
+                        {r.animal?.name || 'Eliminado'}
                       </span>
                     </td>
                     
@@ -162,12 +193,13 @@ export default function HealthPage() {
             
             <div className="p-6">
               <form onSubmit={handleSubmit} className="space-y-5">
+                {errorMsg && (<div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-sm font-bold text-rose-700">{errorMsg}</div>)}
                 <div className="grid grid-cols-1 gap-5">
                   <div>
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1.5">Animal *</label>
                     <select required className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl outline-none focus:ring-2 focus:ring-emerald-500 text-sm" value={formData.animal_id} onChange={e => setFormData({...formData, animal_id: e.target.value})}>
                       <option value="" disabled>-- Seleccione Animal --</option>
-                      {animals.map(a => <option key={a.id} value={a.id}>{a.code || a.name}</option>)}
+                      {animals.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                     </select>
                   </div>
                   <div>
