@@ -1,132 +1,255 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { z } from 'zod';
+import prisma from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth';
 
-const prisma = new PrismaClient();
+const productionSchema = z.object({
+  poza: z.string().trim().min(1, 'La poza es obligatoria'),
 
-// ==========================================
-// 1. OBTENER HISTORIAL DE PARTOS (GET)
-// ==========================================
+  motherId: z.coerce
+    .number()
+    .int('El ID de la madre debe ser un número entero')
+    .positive('La madre es obligatoria'),
+
+  fatherId: z
+    .union([
+      z.coerce.number().int().positive(),
+      z.literal(''),
+      z.null(),
+      z.undefined(),
+    ])
+    .optional(),
+
+  matingDate: z
+    .union([
+      z.coerce.date(),
+      z.literal(''),
+      z.null(),
+      z.undefined(),
+    ])
+    .optional(),
+
+  birthDate: z.coerce.date({
+    message: 'La fecha de parto no es válida',
+  }),
+
+  bornAlive: z.coerce
+    .number()
+    .int('Los nacidos vivos deben ser un número entero')
+    .min(0, 'Los nacidos vivos no pueden ser negativos'),
+
+  bornDead: z.coerce
+    .number()
+    .int('Los nacidos muertos deben ser un número entero')
+    .min(0, 'Los nacidos muertos no pueden ser negativos')
+    .default(0),
+
+  avgBirthWeight: z.coerce
+    .number()
+    .positive('El peso promedio debe ser mayor a 0'),
+
+  observations: z.string().trim().optional(),
+});
+
+function normalizeOptionalId(value) {
+  if (value === '' || value === null || value === undefined) {
+    return null;
+  }
+
+  return Number(value);
+}
+
+function normalizeOptionalDate(value) {
+  if (value === '' || value === null || value === undefined) {
+    return null;
+  }
+
+  return value;
+}
+
 export async function GET() {
+  const { response } = await requireAuth();
+  if (response) return response;
+
   try {
     const logs = await prisma.reproductionLog.findMany({
       include: {
         mother: {
-          select: { code: true, raza: true, currentWeight: true }
+          select: {
+            id: true,
+            name: true,
+            breed: true,
+            gender: true,
+            currentWeight: true,
+          },
         },
         father: {
-          select: { code: true }
-        }
+          select: {
+            id: true,
+            name: true,
+            breed: true,
+            gender: true,
+            currentWeight: true,
+          },
+        },
       },
-      orderBy: { birthDate: 'desc' } // Los partos más recientes primero
+      orderBy: {
+        birthDate: 'desc',
+      },
     });
-    
+
     return NextResponse.json(logs, { status: 200 });
   } catch (error) {
-    console.error("❌ Error en GET /api/production:", error);
+    console.error('Error en GET /api/production:', error);
+
     return NextResponse.json(
-      { error: "No se pudo cargar el historial de partos desde Neon." }, 
+      { error: 'No se pudo cargar el historial de partos.' },
       { status: 500 }
     );
   }
 }
 
-// ==========================================
-// 2. REGISTRAR UN NUEVO PARTO (POST)
-// ==========================================
 export async function POST(request) {
+  const { response } = await requireAuth();
+  if (response) return response;
+
   try {
     const body = await request.json();
-    const { 
-      poza, motherId, fatherId, matingDate, 
-      birthDate, bornAlive, bornDead, avgBirthWeight, observations 
-    } = body;
+    const parsed = productionSchema.safeParse(body);
 
-    // --- VALIDACIÓN 1: Campos obligatorios ---
-    if (!poza || !motherId || !birthDate || bornAlive === undefined || !avgBirthWeight) {
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: "Por favor, completa todos los campos obligatorios (*)." }, 
+        {
+          error: 'Datos inválidos',
+          details: parsed.error.flatten().fieldErrors,
+        },
         { status: 400 }
       );
     }
 
-    const parsedMotherId = parseInt(motherId);
-    const parsedFatherId = fatherId ? parseInt(fatherId) : null;
+    const data = parsed.data;
 
-    // --- VALIDACIÓN 2: Verificar la existencia y sexo de la Madre ---
+    const parsedMotherId = Number(data.motherId);
+    const parsedFatherId = normalizeOptionalId(data.fatherId);
+
     const motherAnimal = await prisma.animal.findUnique({
-      where: { id: parsedMotherId }
+      where: {
+        id: parsedMotherId,
+      },
     });
 
     if (!motherAnimal) {
       return NextResponse.json(
-        { error: `La madre con ID #${motherId} no existe en el inventario.` }, 
+        {
+          error: `La madre con ID #${parsedMotherId} no existe en el inventario.`,
+        },
         { status: 404 }
       );
     }
 
-    if (motherAnimal.gender.toLowerCase() !== 'hembra') {
+    if (motherAnimal.gender !== 'HEMBRA') {
       return NextResponse.json(
-        { error: `El animal #${motherId} está registrado como ${motherAnimal.gender}. Debe ser Hembra para registrar un parto.` }, 
+        {
+          error: `El animal ${motherAnimal.name} está registrado como ${motherAnimal.gender}. Debe ser HEMBRA para registrar un parto.`,
+        },
         { status: 400 }
       );
     }
 
-    // --- VALIDACIÓN 3: Verificar el Padre (si fue ingresado) ---
+    if (motherAnimal.status === 'SOLD' || motherAnimal.status === 'DECEASED') {
+      return NextResponse.json(
+        {
+          error: `La madre ${motherAnimal.name} no está activa en granja. Estado actual: ${motherAnimal.status}.`,
+        },
+        { status: 400 }
+      );
+    }
+
     if (parsedFatherId) {
       const fatherAnimal = await prisma.animal.findUnique({
-        where: { id: parsedFatherId }
+        where: {
+          id: parsedFatherId,
+        },
       });
 
       if (!fatherAnimal) {
         return NextResponse.json(
-          { error: `El padre con ID #${fatherId} no existe en el inventario.` }, 
+          {
+            error: `El padre con ID #${parsedFatherId} no existe en el inventario.`,
+          },
           { status: 404 }
         );
       }
 
-      if (fatherAnimal.gender.toLowerCase() !== 'macho') {
+      if (fatherAnimal.gender !== 'MACHO') {
         return NextResponse.json(
-          { error: `El animal #${fatherId} está registrado como ${fatherAnimal.gender}. Debe ser Macho.` }, 
+          {
+            error: `El animal ${fatherAnimal.name} está registrado como ${fatherAnimal.gender}. Debe ser MACHO.`,
+          },
+          { status: 400 }
+        );
+      }
+
+      if (fatherAnimal.status === 'SOLD' || fatherAnimal.status === 'DECEASED') {
+        return NextResponse.json(
+          {
+            error: `El padre ${fatherAnimal.name} no está activo en granja. Estado actual: ${fatherAnimal.status}.`,
+          },
           { status: 400 }
         );
       }
     }
 
-    // --- REGLA ZOOTÉCNICA AUTOMATIZADA: Calcular Fecha de Destete ---
-    // En la producción de cuyes, el destete óptimo se programa a los 14 días del parto.
-    const dateOfBirth = new Date(birthDate);
-    const calculatedWeaningDate = new Date(dateOfBirth);
-    calculatedWeaningDate.setDate(dateOfBirth.getDate() + 14);
+    const calculatedWeaningDate = new Date(data.birthDate);
+    calculatedWeaningDate.setDate(calculatedWeaningDate.getDate() + 14);
 
-    // --- INSERCIÓN EN NEON ---
     const newProductionLog = await prisma.reproductionLog.create({
       data: {
-        poza: poza.toUpperCase(),
+        poza: data.poza.toUpperCase(),
         motherId: parsedMotherId,
         fatherId: parsedFatherId,
-        matingDate: matingDate ? new Date(matingDate) : null,
-        birthDate: dateOfBirth,
-        bornAlive: parseInt(bornAlive),
-        bornDead: parseInt(bornDead || 0),
-        avgBirthWeight: parseFloat(avgBirthWeight),
+        matingDate: normalizeOptionalDate(data.matingDate),
+        birthDate: data.birthDate,
+        bornAlive: data.bornAlive,
+        bornDead: data.bornDead || 0,
+        avgBirthWeight: data.avgBirthWeight,
         weaningDate: calculatedWeaningDate,
-        observations: observations || null,
+        observations: data.observations || null,
       },
       include: {
-        mother: true,
-        father: true
-      }
+        mother: {
+          select: {
+            id: true,
+            name: true,
+            breed: true,
+            gender: true,
+            currentWeight: true,
+          },
+        },
+        father: {
+          select: {
+            id: true,
+            name: true,
+            breed: true,
+            gender: true,
+            currentWeight: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(
-      { message: "Parto registrado con éxito.", data: newProductionLog }, 
+      {
+        message: 'Parto registrado con éxito.',
+        data: newProductionLog,
+      },
       { status: 201 }
     );
-
   } catch (error) {
-    console.error("❌ Error crítico en POST /api/production:", error);
+    console.error('Error crítico en POST /api/production:', error);
+
     return NextResponse.json(
-      { error: "Error interno del servidor al procesar el registro." }, 
+      { error: 'Error interno del servidor al procesar el registro.' },
       { status: 500 }
     );
   }

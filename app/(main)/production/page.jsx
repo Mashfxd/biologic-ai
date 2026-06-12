@@ -30,7 +30,10 @@ export default function ProductionPage() {
       if (res.ok) {
         const data = await res.json();
         setBirths(data);
-      }
+      }else {
+        const data = await res.json();
+        setErrorMsg(data.error || 'No se pudo cargar producción.');
+        setBirths([]);}
     } catch (error) {
       console.error("Error al cargar datos:", error);
     } finally {
