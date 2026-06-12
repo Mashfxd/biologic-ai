@@ -52,6 +52,82 @@ export default function DashboardPage() {
 
   // Prevenir crasheos si la API no devuelve datos
   if (!metrics) {
+    const handleBasicAiAnalysis = () => {
+  const messages = [];
+
+  const mortality = Number(metrics.tasaMortalidad || 0);
+  const morbidity = Number(metrics.tasaMorbilidad || 0);
+  const activePopulation = Number(metrics.poblacionActiva || 0);
+  const sickAnimals = Number(metrics.animalesEnfermos || 0);
+  const births = Number(metrics.produccion?.totalCrias || 0);
+  const avgCurrentWeight = Number(metrics.pesoPromedioActual || 0);
+  const avgBirthsPerDelivery = Number(metrics.produccion?.promedioCriasPorParto || 0);
+
+  if (activePopulation === 0) {
+    setAiAnalysis(
+      'Aún no hay población activa suficiente para generar un análisis zootécnico. Registra animales sanos o en seguimiento para iniciar el diagnóstico.'
+    );
+    return;
+  }
+
+  if (morbidity >= 20) {
+    messages.push(
+      `Morbilidad alta (${morbidity}%). Se recomienda revisar ventilación, limpieza, densidad por poza y seguimiento sanitario de los ${sickAnimals} animales enfermos.`
+    );
+  } else if (morbidity >= 8) {
+    messages.push(
+      `Morbilidad moderada (${morbidity}%). Conviene reforzar observación clínica y separar animales con signos de enfermedad.`
+    );
+  } else {
+    messages.push(
+      `Morbilidad controlada (${morbidity}%). El estado sanitario general parece estable.`
+    );
+  }
+
+  if (mortality >= 10) {
+    messages.push(
+      `Mortalidad elevada (${mortality}%). Revisa causas de muerte, manejo térmico, alimentación, bioseguridad y registros de tratamientos.`
+    );
+  } else if (mortality > 0) {
+    messages.push(
+      `Mortalidad presente pero baja (${mortality}%). Mantén seguimiento para evitar incremento.`
+    );
+  } else {
+    messages.push(
+      'No se registra mortalidad acumulada. Es un indicador positivo para la granja.'
+    );
+  }
+
+  if (births === 0) {
+    messages.push(
+      'Todavía no hay nacimientos registrados. Cuando agregues partos, el sistema podrá evaluar productividad reproductiva.'
+    );
+  } else if (avgBirthsPerDelivery < 2.5) {
+    messages.push(
+      `Promedio de crías por parto bajo (${avgBirthsPerDelivery}). Revisa edad reproductiva, condición corporal, empadre y selección de reproductores.`
+    );
+  } else if (avgBirthsPerDelivery <= 4) {
+    messages.push(
+      `Promedio de crías por parto aceptable (${avgBirthsPerDelivery}). La producción reproductiva parece dentro de un rango funcional.`
+    );
+  } else {
+    messages.push(
+      `Promedio de crías por parto alto (${avgBirthsPerDelivery}). Buen rendimiento reproductivo; conviene vigilar peso al nacimiento y supervivencia.`
+    );
+  }
+
+  if (avgCurrentWeight > 0 && avgCurrentWeight < 500) {
+    messages.push(
+      `Peso promedio actual bajo (${avgCurrentWeight} g). Verifica edad de los animales, calidad de dieta y frecuencia de pesaje.`
+    );
+  } else if (avgCurrentWeight >= 500) {
+    messages.push(
+      `Peso promedio actual de ${avgCurrentWeight} g. El crecimiento general parece favorable según la población registrada.`
+    );
+  }
+
+  setAiAnalysis(messages.join(' '));
+};
   return (
     <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
       <h2 className="text-lg font-bold text-slate-800 dark:text-white">
@@ -140,9 +216,13 @@ export default function DashboardPage() {
               <div className="text-xs text-emerald-50/80 leading-relaxed mb-6 italic min-h-[60px]">
                 {aiAnalysis || "Pulsa para analizar el rendimiento zootécnico en tiempo real basado en la base de datos."}
               </div>
-              <button className="w-full bg-emerald-600 text-white text-[10px] font-bold py-3 px-6 rounded-lg hover:bg-emerald-500 transition-all uppercase focus-visible:ring-2 focus-visible:ring-emerald-400 outline-none">
-                Analizar Producción
-              </button>
+              <button
+  type="button"
+  onClick={handleBasicAiAnalysis}
+  className="w-full bg-emerald-600 text-white text-[10px] font-bold py-3 px-6 rounded-lg hover:bg-emerald-500 transition-all uppercase focus-visible:ring-2 focus-visible:ring-emerald-400 outline-none"
+>
+  Analizar Producción
+</button>
             </div>
           </div>
 

@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, TrendingUp, Calendar, X, Edit, Trash2, Weight } from 'lucide-react';
+import { PlusCircle, TrendingUp, Calendar, X, Edit, Trash2, Weight, Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Card from '@/components/ui/Card';
 
 export default function GrowthPage() {
   const [records, setRecords] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
@@ -73,6 +74,15 @@ export default function GrowthPage() {
     setErrorMsg('Seleccione un animal.');
     return;
   }
+  const filteredRecords = records.filter((record) => {
+  const term = searchTerm.toLowerCase();
+
+  return (
+    record.animal?.name?.toLowerCase().includes(term) ||
+    record.weight?.toString().includes(term) ||
+    new Date(record.date).toLocaleDateString('es-ES').includes(term)
+  );
+});
 
   try {
     const method = editingId ? 'PUT' : 'POST';
@@ -115,6 +125,24 @@ export default function GrowthPage() {
             <PlusCircle size={20} /> Registrar Pesaje
           </button>
         </div>
+        <div className="mb-4">
+  <div className="relative w-full sm:w-96">
+    <Search
+      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+      size={16}
+      aria-hidden="true"
+    />
+
+    <input
+      type="text"
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      placeholder="Buscar por animal, peso o fecha..."
+      className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 dark:text-slate-200 placeholder-slate-400"
+    />
+  </div>
+</div>
+        
 
         {/* Tabla Adaptativa */}
         <div className="md:border md:border-slate-100 md:rounded-xl md:overflow-hidden bg-[#F8FAFC] md:bg-white p-2 md:p-0 rounded-xl">
@@ -128,7 +156,7 @@ export default function GrowthPage() {
               </tr>
             </thead>
             <tbody className="flex flex-col md:table-row-group gap-4 md:gap-0">
-              {records.length > 0 ? records.map((r) => (
+              {filteredRecords.length > 0 ? filteredRecords.map((r) => (
                 <tr key={r.id} className="flex flex-col md:table-row bg-white md:hover:bg-slate-50/50 transition-colors border border-slate-200 md:border-0 md:border-b md:border-slate-100 rounded-xl md:rounded-none p-4 md:p-0 shadow-sm md:shadow-none">
                   
                   {/* Fecha */}

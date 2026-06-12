@@ -38,25 +38,28 @@ export default function DashboardLayout({ children }) {
 
   // 1. Cargar el Modo Oscuro al iniciar
   useEffect(() => {
-    const theme = localStorage.getItem('zooai_theme');
-    if (theme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
-  }, []);
+  const savedTheme = localStorage.getItem('zooai_theme');
+  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+  const shouldUseDark = savedTheme
+    ? savedTheme === 'dark'
+    : prefersDark;
+
+  setIsDarkMode(shouldUseDark);
+  document.documentElement.classList.toggle('dark', shouldUseDark);
+}, []);
 
   // 2. Función ESTRICTA para cambiar el Modo Oscuro
   const toggleTheme = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('zooai_theme', 'light');
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('zooai_theme', 'dark');
-      setIsDarkMode(true);
-    }
-  };
+  setIsDarkMode((previousValue) => {
+    const nextValue = !previousValue;
+
+    document.documentElement.classList.toggle('dark', nextValue);
+    localStorage.setItem('zooai_theme', nextValue ? 'dark' : 'light');
+
+    return nextValue;
+  });
+};
 
   // 3. Cerrar menús al cambiar de página
   useEffect(() => {

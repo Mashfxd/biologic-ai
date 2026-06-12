@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { healthLogSchema } from '@/lib/validations';
+import { growthLogSchema } from '@/lib/validations';
 import { requireAuth } from '@/lib/auth';
 
 export async function GET() {
@@ -8,7 +8,7 @@ export async function GET() {
   if (response) return response;
 
   try {
-    const records = await prisma.healthLog.findMany({
+    const records = await prisma.growthLog.findMany({
       include: {
         animal: true,
       },
@@ -19,10 +19,10 @@ export async function GET() {
 
     return NextResponse.json(records || []);
   } catch (error) {
-    console.error('Error GET HealthLog:', error);
+    console.error('Error GET GrowthLog:', error);
 
     return NextResponse.json(
-      { error: 'Error al obtener registros de salud' },
+      { error: 'Error al obtener registros de crecimiento' },
       { status: 500 }
     );
   }
@@ -34,7 +34,7 @@ export async function POST(req) {
 
   try {
     const body = await req.json();
-    const parsed = healthLogSchema.safeParse(body);
+    const parsed = growthLogSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -48,11 +48,10 @@ export async function POST(req) {
 
     const data = parsed.data;
 
-    const record = await prisma.healthLog.create({
+    const record = await prisma.growthLog.create({
       data: {
         animal_id: data.animal_id,
-        diagnostic: data.diagnostic,
-        treatment: data.treatment,
+        weight: data.weight,
         date: data.date,
       },
       include: {
@@ -60,12 +59,21 @@ export async function POST(req) {
       },
     });
 
+    await prisma.animal.update({
+      where: {
+        id: data.animal_id,
+      },
+      data: {
+        currentWeight: data.weight,
+      },
+    });
+
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
-    console.error('Error POST HealthLog:', error);
+    console.error('Error POST GrowthLog:', error);
 
     return NextResponse.json(
-      { error: 'Error al crear registro de salud' },
+      { error: 'Error al crear registro de crecimiento' },
       { status: 500 }
     );
   }
@@ -86,7 +94,7 @@ export async function PUT(req) {
       );
     }
 
-    const parsed = healthLogSchema.safeParse(body);
+    const parsed = growthLogSchema.safeParse(body);
 
     if (!parsed.success) {
       return NextResponse.json(
@@ -100,14 +108,13 @@ export async function PUT(req) {
 
     const data = parsed.data;
 
-    const record = await prisma.healthLog.update({
+    const record = await prisma.growthLog.update({
       where: {
         id,
       },
       data: {
         animal_id: data.animal_id,
-        diagnostic: data.diagnostic,
-        treatment: data.treatment,
+        weight: data.weight,
         date: data.date,
       },
       include: {
@@ -115,12 +122,21 @@ export async function PUT(req) {
       },
     });
 
+    await prisma.animal.update({
+      where: {
+        id: data.animal_id,
+      },
+      data: {
+        currentWeight: data.weight,
+      },
+    });
+
     return NextResponse.json(record);
   } catch (error) {
-    console.error('Error PUT HealthLog:', error);
+    console.error('Error PUT GrowthLog:', error);
 
     return NextResponse.json(
-      { error: 'Error al actualizar registro de salud' },
+      { error: 'Error al actualizar registro de crecimiento' },
       { status: 500 }
     );
   }
@@ -141,20 +157,20 @@ export async function DELETE(req) {
       );
     }
 
-    await prisma.healthLog.delete({
+    await prisma.growthLog.delete({
       where: {
         id,
       },
     });
 
     return NextResponse.json({
-      message: 'Registro de salud eliminado',
+      message: 'Registro de crecimiento eliminado',
     });
   } catch (error) {
-    console.error('Error DELETE HealthLog:', error);
+    console.error('Error DELETE GrowthLog:', error);
 
     return NextResponse.json(
-      { error: 'Error al eliminar registro de salud' },
+      { error: 'Error al eliminar registro de crecimiento' },
       { status: 500 }
     );
   }
