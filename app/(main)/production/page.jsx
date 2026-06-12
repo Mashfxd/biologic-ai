@@ -14,6 +14,7 @@ export default function ProductionPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [animals, setAnimals] = useState([]);
 
   const [formData, setFormData] = useState({
     poza: '', motherId: '', fatherId: '', matingDate: '',
@@ -40,10 +41,28 @@ export default function ProductionPage() {
       setIsLoading(false);
     }
   };
+  
+  const fetchAnimals = async () => {
+  try {
+    const res = await fetch('/api/animals');
+
+    if (res.ok) {
+      const data = await res.json();
+      setAnimals(Array.isArray(data) ? data : []);
+    } else {
+      setAnimals([]);
+    }
+  } catch (error) {
+    console.error('Error al cargar animales:', error);
+    setAnimals([]);
+  }
+};
 
   useEffect(() => {
     fetchProduction();
+    fetchAnimals();
   }, []);
+
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -84,6 +103,18 @@ export default function ProductionPage() {
   const promCrias = totalNacimientos > 0 ? (births.reduce((sum, b) => sum + b.bornAlive, 0) / totalNacimientos).toFixed(1) : "0.0";
   const promPeso = totalNacimientos > 0 ? (births.reduce((sum, b) => sum + parseFloat(b.avgBirthWeight || 0), 0) / totalNacimientos).toFixed(1) : "0.0";
 
+  const femaleAnimals = animals.filter(
+  (animal) =>
+    animal.gender === 'HEMBRA' &&
+    ['HEALTHY', 'SICK'].includes(animal.status)
+);
+
+const maleAnimals = animals.filter(
+  (animal) =>
+    animal.gender === 'MACHO' &&
+    ['HEALTHY', 'SICK'].includes(animal.status)
+);
+
   const filteredBirths = displayData.filter(record => 
     record.motherId?.toString().includes(searchTerm) || 
     record.poza?.toLowerCase().includes(searchTerm.toLowerCase())
@@ -122,11 +153,31 @@ export default function ProductionPage() {
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">ID Madre *</label>
-                    <input type="number" name="motherId" value={formData.motherId} required onChange={handleInputChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Ej. 17525" />
+                   <select name="motherId" value={formData.motherId} required onChange={handleInputChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"> <option value="">Seleccione madre...</option>{femaleAnimals.map((animal) => (<option key={animal.id} value={animal.id}>{animal.name} / {animal.breed} / {animal.currentWeight}g</option>))}</select>
+                   {femaleAnimals.length === 0 && (<p className="mt-1 text-xs font-medium text-rose-500">No hay hembras activas registradas en inventario.</p>
+)}
                   </div>
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1.5">ID Padre</label>
-                    <input type="number" name="fatherId" value={formData.fatherId} onChange={handleInputChange} className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Opcional" />
+                   <select
+    name="fatherId"
+    value={formData.fatherId}
+    onChange={handleInputChange}
+    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500"
+  >
+    <option value="">Sin padre registrado</option>
+
+    {maleAnimals.map((animal) => (
+      <option key={animal.id} value={animal.id}>
+        {animal.name} / {animal.breed} / {animal.currentWeight}g
+      </option>
+    ))}
+  </select>
+  {maleAnimals.length === 0 && (
+  <p className="mt-1 text-xs font-medium text-slate-400">
+    No hay machos activos registrados. Puedes dejar este campo vacío.
+  </p>
+)}
                   </div>
                 </div>
               </div>
