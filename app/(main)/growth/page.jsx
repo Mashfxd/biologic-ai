@@ -73,16 +73,7 @@ export default function GrowthPage() {
   if (!formData.animal_id) {
     setErrorMsg('Seleccione un animal.');
     return;
-  }
-  const filteredRecords = records.filter((record) => {
-  const term = searchTerm.toLowerCase();
-
-  return (
-    record.animal?.name?.toLowerCase().includes(term) ||
-    record.weight?.toString().includes(term) ||
-    new Date(record.date).toLocaleDateString('es-ES').includes(term)
-  );
-});
+  };
 
   try {
     const method = editingId ? 'PUT' : 'POST';
@@ -113,6 +104,15 @@ export default function GrowthPage() {
   }
 };
 
+ const filteredRecords = records.filter((record) => {
+  const term = searchTerm.toLowerCase();
+
+  return (
+    record.animal?.name?.toLowerCase().includes(term) ||
+    record.weight?.toString().includes(term) ||
+    new Date(record.date).toLocaleDateString('es-ES').includes(term)
+  );
+})
   return (
     <div className="space-y-4 md:space-y-6">
       <Card className="p-4 md:p-6 bg-transparent border-none shadow-none md:bg-white md:border-solid md:shadow-sm">

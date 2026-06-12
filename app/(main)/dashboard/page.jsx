@@ -39,20 +39,9 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   };
+  const handleBasicAiAnalysis = () => {
+  if (!metrics) return;
 
-  // Si está cargando, mostramos un pequeño texto para que la pantalla no salte
-  if (isLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-400">
-        <Loader2 className="w-8 h-8 animate-spin mb-4" />
-        <p className="font-medium">Calculando métricas zootécnicas...</p>
-      </div>
-    );
-  }
-
-  // Prevenir crasheos si la API no devuelve datos
-  if (!metrics) {
-    const handleBasicAiAnalysis = () => {
   const messages = [];
 
   const mortality = Number(metrics.tasaMortalidad || 0);
@@ -128,24 +117,37 @@ export default function DashboardPage() {
 
   setAiAnalysis(messages.join(' '));
 };
-  return (
-    <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
-      <h2 className="text-lg font-bold text-slate-800 dark:text-white">
-        No se pudieron cargar las métricas
-      </h2>
-      <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
-        Revisa la API de métricas o vuelve a intentarlo.
-      </p>
-      <button
-        type="button"
-        onClick={fetchMetrics}
-        className="mt-4 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-      >
-        Reintentar
-      </button>
-    </div>
-  );
-}
+
+  // Si está cargando, mostramos un pequeño texto para que la pantalla no salte
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-400">
+        <Loader2 className="w-8 h-8 animate-spin mb-4" />
+        <p className="font-medium">Calculando métricas zootécnicas...</p>
+      </div>
+    );
+  }
+
+  // Prevenir crasheos si la API no devuelve datos
+  if (!metrics) {
+    return (
+      <div className="p-6 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-center">
+        <h2 className="text-lg font-bold text-slate-800 dark:text-white">
+          No se pudieron cargar las métricas
+        </h2>
+        <p className="mt-2 text-sm text-slate-500 dark:text-slate-400">
+          Revisa la API de métricas o vuelve a intentarlo.
+        </p>
+        <button
+          type="button"
+          onClick={fetchMetrics}
+          className="mt-4 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-bold hover:bg-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="grid gap-4 md:gap-6 animate-in fade-in duration-500">
