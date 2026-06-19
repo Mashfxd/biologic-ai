@@ -1,35 +1,36 @@
 "use client";
-import { PlusCircle, Shield, User as UserIcon, X, Edit, Trash2 } from 'lucide-react';
-import React, { useState, useEffect ,useRef} from 'react';
+import { PlusCircle, Shield, User as UserIcon, X, Edit, Trash2, Search } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
 import Card from '@/components/ui/Card';
 import { cn } from '@/lib/utils';
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
-  
+
   const userModalTitleId = editingId ? 'editar-usuario-title' : 'nuevo-usuario-title';
   const firstUserModalFieldRef = useRef(null);
 
-useEffect(() => {
-  if (!showModal) return;
+  useEffect(() => {
+    if (!showModal) return;
 
-  firstUserModalFieldRef.current?.focus();
+    firstUserModalFieldRef.current?.focus();
 
-  const handleKeyDown = (event) => {
-    if (event.key === 'Escape') {
-      setShowModal(false);
-    }
-  };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setShowModal(false);
+      }
+    };
 
-  document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
 
-  return () => {
-    document.removeEventListener('keydown', handleKeyDown);
-  };
-}, [showModal]);
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showModal]);
 
   const [currentUserRole, setCurrentUserRole] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -51,7 +52,7 @@ useEffect(() => {
     const storedUser = localStorage.getItem('zooai_user');
     if (storedUser) {
       const user = JSON.parse(storedUser);
-      setCurrentUserRole(String(user.role || "").trim().toUpperCase());
+      setCurrentUserRole(String(user.role || '').trim().toUpperCase());
     }
   }, []);
 
@@ -60,8 +61,11 @@ useEffect(() => {
       const res = await fetch('/api/users');
       const data = await res.json();
       setUsers(Array.isArray(data) ? data : []);
-    } catch (error) { console.error(error); } 
-    finally { setLoading(false); }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleEditClick = (user) => {
@@ -75,7 +79,9 @@ useEffect(() => {
     try {
       const res = await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
       if (res.ok) fetchUsers();
-    } catch (error) { alert("Error de conexión"); }
+    } catch (error) {
+      alert('Error de conexión');
+    }
   };
 
   const handleOpenNewUserModal = () => {
@@ -94,44 +100,64 @@ useEffect(() => {
         body: JSON.stringify(isUpdating ? { ...formData, id: editingId } : formData)
       });
 
-      const data = await res.json(); // Obtenemos la respuesta del servidor
+      const data = await res.json();
 
       if (res.ok) {
         setShowModal(false);
-        fetchUsers(); 
+        fetchUsers();
       } else {
-        // Mostramos el error específico que enviamos desde el backend
-        alert(`Error: ${data.error || "No se pudo guardar"}`);
+        alert(`Error: ${data.error || 'No se pudo guardar'}`);
       }
     } catch (error) {
-      alert("Error crítico: Revisa tu conexión a internet o la base de datos.");
+      alert('Error crítico: Revisa tu conexión a internet o la base de datos.');
     }
   };
 
+  const filteredUsers = users.filter((user) => {
+    const term = searchTerm.toLowerCase();
+
+    return (
+      user.username?.toLowerCase().includes(term) ||
+      user.email?.toLowerCase().includes(term) ||
+      user.role?.toLowerCase().includes(term) ||
+      (user.role === 'ADMIN' ? 'administrador' : 'operador').includes(term)
+    );
+  });
+
   return (
     <div className="space-y-4 md:space-y-6">
-      <Card className="p-4 md:p-6 bg-transparent border-none shadow-none md:bg-white md:border-solid md:shadow-sm">
+      <Card className="p-4 md:p-6 bg-transparent border-none shadow-none md:bg-white md:border-solid md:shadow-sm dark:md:bg-slate-900 dark:border-slate-800 transition-colors">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
           <div>
-            <h3 className="text-xl font-bold text-slate-800">Gestión de Usuarios</h3>
-            <p className="text-sm text-slate-500 font-medium">Administra los accesos del sistema</p>
+            <h3 className="text-xl font-bold text-slate-800 dark:text-white">Gestión de Usuarios</h3>
+            <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">Administra los accesos del sistema</p>
           </div>
           <button
-  type="button"
-  onClick={handleOpenNewUserModal}
-  className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
->
-  <PlusCircle size={20} aria-hidden="true" focusable="false" />
-  Nuevo Usuario
-</button>
+            type="button"
+            onClick={handleOpenNewUserModal}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-all shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+          >
+            <PlusCircle size={20} aria-hidden="true" focusable="false" />
+            Nuevo Usuario
+          </button>
         </div>
-        
-        {/* LA NUEVA TABLA TRANSFORMABLE (Sin overflow-x, full Card View en Móvil) */}
-        <div className="md:border md:border-slate-100 md:rounded-xl md:overflow-hidden bg-[#F8FAFC] md:bg-white p-2 md:p-0 rounded-xl">
+
+        <div className="mb-4">
+          <div className="relative w-full sm:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por usuario, email o rol..."
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 dark:text-slate-200 placeholder-slate-400"
+            />
+          </div>
+        </div>
+
+        <div className="md:border md:border-slate-100 dark:md:border-slate-800 md:rounded-xl md:overflow-hidden bg-[#F8FAFC] dark:bg-slate-900 md:bg-white dark:md:bg-slate-950 p-2 md:p-0 rounded-xl transition-colors">
           <table className="w-full text-left border-collapse">
-            
-            {/* Ocultamos el encabezado tradicional en celular */}
-            <thead className="hidden md:table-header-group bg-[#F8FAFC] border-b border-slate-100">
+            <thead className="hidden md:table-header-group bg-[#F8FAFC] dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
               <tr>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Usuario</th>
                 <th className="px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Email</th>
@@ -140,73 +166,67 @@ useEffect(() => {
               </tr>
             </thead>
 
-            {/* En celular, el tbody se vuelve un Flex de columnas (tarjetas) */}
             <tbody className="flex flex-col md:table-row-group gap-4 md:gap-0">
-              {users.length > 0 ? users.map((user) => (
-                <tr 
-                  key={user.id} 
-                  // TR transformado: en celular es un bloque blanco con sombra, en PC es una fila
-                  className="flex flex-col md:table-row bg-white md:hover:bg-slate-50/50 transition-colors border border-slate-200 md:border-0 md:border-b md:border-slate-100 rounded-xl md:rounded-none p-4 md:p-0 shadow-sm md:shadow-none"
+              {filteredUsers.length > 0 ? filteredUsers.map((user) => (
+                <tr
+                  key={user.id}
+                  className="flex flex-col md:table-row bg-white dark:bg-slate-900 md:hover:bg-slate-50/50 dark:md:hover:bg-slate-800/50 transition-colors border border-slate-200 dark:border-slate-800 md:border-0 md:border-b md:border-slate-100 dark:md:border-slate-800 rounded-xl md:rounded-none p-4 md:p-0 shadow-sm md:shadow-none"
                 >
-                  
-                  {/* Celda Usuario */}
-                  <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
+                  <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 dark:border-slate-800 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Usuario</span>
                     <div className="flex items-center gap-3">
-                      <div className="hidden md:flex w-8 h-8 rounded-full bg-slate-100 items-center justify-center text-slate-600 shrink-0">
+                      <div className="hidden md:flex w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 items-center justify-center text-slate-600 dark:text-slate-300 shrink-0">
                         <UserIcon size={16} />
                       </div>
-                      <span className="font-bold text-slate-800">{user.username}</span>
+                      <span className="font-bold text-slate-800 dark:text-slate-100">{user.username}</span>
                     </div>
                   </td>
 
-                  {/* Celda Email */}
-                  <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
+                  <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 dark:border-slate-800 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Email</span>
-                    <span className="text-sm font-medium text-slate-600 truncate max-w-[180px] md:max-w-none">{user.email}</span>
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-300 truncate max-w-[180px] md:max-w-none">{user.email}</span>
                   </td>
 
-                  {/* Celda Rol */}
-                  <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
+                  <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 dark:border-slate-800 md:border-none pb-3 md:pb-0 mb-3 md:mb-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Rol</span>
-                    <span className={cn("px-3 py-1 text-[10px] md:text-xs font-bold rounded-full uppercase border", user.role === 'ADMIN' ? "bg-purple-50 text-purple-700 border-purple-100" : "bg-blue-50 text-blue-700 border-blue-100")}>
+                    <span className={cn('px-3 py-1 text-[10px] md:text-xs font-bold rounded-full uppercase border', user.role === 'ADMIN' ? 'bg-purple-50 text-purple-700 border-purple-100' : 'bg-blue-50 text-blue-700 border-blue-100')}>
                       {user.role === 'ADMIN' ? 'Administrador' : 'Operador'}
                     </span>
                   </td>
 
-                  {/* Celda Acciones */}
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell pt-1 md:pt-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Acciones</span>
                     <div className="flex justify-end gap-2 md:gap-3">
                       {String(currentUserRole).includes('ADMIN') ? (
                         <>
                           <button
-  type="button"
-  onClick={() => handleEditClick(user)}
-  aria-label={`Editar usuario ${user.username}`}
-  className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-blue-600 rounded-lg transition-colors border border-slate-200 md:border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
->
-  <Edit size={16} aria-hidden="true" focusable="false" />
-</button>
+                            type="button"
+                            onClick={() => handleEditClick(user)}
+                            aria-label={`Editar usuario ${user.username}`}
+                            className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-blue-600 rounded-lg transition-colors border border-slate-200 md:border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                          >
+                            <Edit size={16} aria-hidden="true" focusable="false" />
+                          </button>
                           <button
-  type="button"
-  onClick={() => handleDeleteClick(user.id, user.username)}
-  aria-label={`Eliminar usuario ${user.username}`}
-  className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-red-600 rounded-lg transition-colors border border-slate-200 md:border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
->
-  <Trash2 size={16} aria-hidden="true" focusable="false" />
-</button>
+                            type="button"
+                            onClick={() => handleDeleteClick(user.id, user.username)}
+                            aria-label={`Eliminar usuario ${user.username}`}
+                            className="p-2 bg-slate-50 md:bg-transparent text-slate-500 hover:text-red-600 rounded-lg transition-colors border border-slate-200 md:border-none focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500"
+                          >
+                            <Trash2 size={16} aria-hidden="true" focusable="false" />
+                          </button>
                         </>
                       ) : (
                         <span className="text-[10px] text-slate-400 italic bg-slate-50 px-2 py-1 rounded">Limitado</span>
                       )}
                     </div>
                   </td>
-
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center text-slate-400 font-medium">Cargando...</td>
+                  <td colSpan="4" className="px-6 py-8 text-center text-slate-400 font-medium">
+                    {loading ? 'Cargando usuarios...' : searchTerm ? 'No se encontraron usuarios.' : 'No hay usuarios registrados.'}
+                  </td>
                 </tr>
               )}
             </tbody>
@@ -214,13 +234,12 @@ useEffect(() => {
         </div>
       </Card>
 
-      {/* MODAL (Se mantiene igual, ya lo habíamos optimizado) */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4" role="presentation">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col" role="dialog" aria-labelledby={userModalTitleId} aria-modal="true" >
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col" role="dialog" aria-labelledby={userModalTitleId} aria-modal="true">
             <div className="flex justify-between items-center p-5 border-b border-slate-100 bg-white shrink-0">
               <h3 id={userModalTitleId} className="font-bold text-lg text-slate-800">{editingId ? 'Editar Usuario' : 'Registrar Nuevo Usuario'}</h3>
-              <button type="button" onClick={() => setShowModal(false)}  className="text-slate-400 hover:bg-slate-100 p-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="Cerrar modal">
+              <button type="button" onClick={() => setShowModal(false)} className="text-slate-400 hover:bg-slate-100 p-1 rounded-md transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500" aria-label="Cerrar modal">
                 <X size={20} aria-hidden="true" focusable="false" />
               </button>
             </div>
@@ -238,7 +257,7 @@ useEffect(() => {
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-1">
                     Contraseña {editingId && <span className="text-emerald-500 lowercase">(Opcional)</span>}
                   </label>
-                  <input required={!editingId} type="password" minLength="6" className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" placeholder={editingId ? "Dejar en blanco para no cambiar" : "Mínimo 6 caracteres"} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
+                  <input required={!editingId} type="password" minLength="6" className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" placeholder={editingId ? 'Dejar en blanco para no cambiar' : 'Mínimo 6 caracteres'} value={formData.password} onChange={e => setFormData({...formData, password: e.target.value})} />
                 </div>
                 <div>
                   <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Rol en el Sistema</label>
@@ -249,7 +268,9 @@ useEffect(() => {
                 </div>
                 <div className="pt-4 flex flex-col sm:flex-row justify-end gap-2">
                   <button type="button" onClick={() => setShowModal(false)} className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold text-slate-500 hover:bg-slate-100 rounded-lg transition-colors">Cancelar</button>
-                  <button type="submit" className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors">{editingId ? 'Guardar Cambios' : 'Crear Usuario'}</button>
+                  <button type="submit" className="w-full sm:w-auto px-4 py-2.5 text-sm font-bold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors shadow-sm">
+                    {editingId ? 'Guardar Cambios' : 'Crear Usuario'}
+                  </button>
                 </div>
               </form>
             </div>
