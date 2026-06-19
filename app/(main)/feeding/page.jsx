@@ -1,11 +1,12 @@
 "use client";
 import React, { useState, useEffect } from 'react';
-import { PlusCircle, Calendar, Utensils, X, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Calendar, Utensils, X, Edit, Trash2, Search } from 'lucide-react';
 import Card from '@/components/ui/Card';
 
 export default function FeedingPage() {
   const [records, setRecords] = useState([]);
-  const [animals, setAnimals] = useState([]); // Nuevo estado para la lista desplegable
+  const [searchTerm, setSearchTerm] = useState('');
+  const [animals, setAnimals] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -15,9 +16,9 @@ export default function FeedingPage() {
     animal_id: '', food_type: 'Concentrado', quantity: '', date: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => { 
-    fetchRecords(); 
-    fetchAnimals(); // Cargamos los animales al iniciar
+  useEffect(() => {
+    fetchRecords();
+    fetchAnimals();
   }, []);
 
   const fetchRecords = async () => {
@@ -26,8 +27,11 @@ export default function FeedingPage() {
       const res = await fetch('/api/feeding');
       const data = await res.json();
       setRecords(Array.isArray(data) ? data : []);
-    } catch (error) { console.error(error); } 
-    finally { setLoading(false); }
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const fetchAnimals = async () => {
@@ -35,7 +39,9 @@ export default function FeedingPage() {
       const res = await fetch('/api/animals');
       const data = await res.json();
       setAnimals(Array.isArray(data) ? data : []);
-    } catch (error) { console.error(error); }
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleOpenModal = (record = null) => {
@@ -49,12 +55,11 @@ export default function FeedingPage() {
       });
     } else {
       setEditingId(null);
-      // Por defecto seleccionamos el primer animal si existe
-      setFormData({ 
-        animal_id: animals.length > 0 ? animals[0].id : '', 
-        food_type: 'Concentrado', 
-        quantity: '', 
-        date: new Date().toISOString().split('T')[0] 
+      setFormData({
+        animal_id: animals.length > 0 ? animals[0].id : '',
+        food_type: 'Concentrado',
+        quantity: '',
+        date: new Date().toISOString().split('T')[0]
       });
     }
     setErrorMsg('');
@@ -62,48 +67,59 @@ export default function FeedingPage() {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm("¿Eliminar este registro de alimentación?")) return;
+    if (!confirm('¿Eliminar este registro de alimentación?')) return;
     await fetch(`/api/feeding?id=${id}`, { method: 'DELETE' });
     fetchRecords();
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
-  setErrorMsg('');
+    e.preventDefault();
+    setErrorMsg('');
 
-  if (!formData.animal_id) {
-    setErrorMsg('Debe seleccionar un animal.');
-    return;
-  }
-
-  try {
-    const method = editingId ? 'PUT' : 'POST';
-    const body = editingId ? { ...formData, id: editingId } : formData;
-
-    const res = await fetch('/api/feeding', {
-      method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    const result = await res.json();
-
-    if (!res.ok) {
-      const details = result.details
-        ? Object.values(result.details).flat().join(' ')
-        : '';
-
-      setErrorMsg(result.error || details || 'No se pudo guardar el registro.');
+    if (!formData.animal_id) {
+      setErrorMsg('Debe seleccionar un animal.');
       return;
     }
 
-    setShowModal(false);
-    fetchRecords();
-  } catch (error) {
-    console.error('Error al guardar alimentación:', error);
-    setErrorMsg('Error de conexión con el servidor.');
-  }
-};
+    try {
+      const method = editingId ? 'PUT' : 'POST';
+      const body = editingId ? { ...formData, id: editingId } : formData;
+
+      const res = await fetch('/api/feeding', {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok) {
+        const details = result.details
+          ? Object.values(result.details).flat().join(' ')
+          : '';
+
+        setErrorMsg(result.error || details || 'No se pudo guardar el registro.');
+        return;
+      }
+
+      setShowModal(false);
+      fetchRecords();
+    } catch (error) {
+      console.error('Error al guardar alimentación:', error);
+      setErrorMsg('Error de conexión con el servidor.');
+    }
+  };
+
+  const filteredRecords = records.filter((record) => {
+    const term = searchTerm.toLowerCase();
+
+    return (
+      record.animal?.name?.toLowerCase().includes(term) ||
+      record.food_type?.toLowerCase().includes(term) ||
+      record.quantity?.toString().includes(term) ||
+      new Date(record.date).toLocaleDateString('es-ES').includes(term)
+    );
+  });
 
   return (
     <div className="space-y-4 md:space-y-6">
@@ -118,7 +134,19 @@ export default function FeedingPage() {
           </button>
         </div>
 
-        {/* Tabla Transformable a Tarjetas */}
+        <div className="mb-4">
+          <div className="relative w-full sm:w-96">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} aria-hidden="true" />
+            <input
+              type="text"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar por animal, alimento, cantidad o fecha..."
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-slate-700 dark:text-slate-200 placeholder-slate-400"
+            />
+          </div>
+        </div>
+
         <div className="md:border md:border-slate-100 md:rounded-xl md:overflow-hidden bg-[#F8FAFC] md:bg-white p-2 md:p-0 rounded-xl">
           <table className="w-full text-left border-collapse">
             <thead className="hidden md:table-header-group bg-[#F8FAFC] border-b border-slate-100">
@@ -131,10 +159,8 @@ export default function FeedingPage() {
               </tr>
             </thead>
             <tbody className="flex flex-col md:table-row-group gap-4 md:gap-0">
-              {records.length > 0 ? records.map((r) => (
+              {filteredRecords.length > 0 ? filteredRecords.map((r) => (
                 <tr key={r.id} className="flex flex-col md:table-row bg-white md:hover:bg-slate-50/50 transition-colors border border-slate-200 md:border-0 md:border-b md:border-slate-100 rounded-xl md:rounded-none p-4 md:p-0 shadow-sm md:shadow-none">
-                  
-                  {/* Fecha */}
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-2 md:pb-0 mb-2 md:mb-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Fecha</span>
                     <div className="flex items-center gap-2 text-slate-600 font-medium text-sm">
@@ -143,13 +169,11 @@ export default function FeedingPage() {
                     </div>
                   </td>
 
-                  {/* Animal (Llamado a través de la relación) */}
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-2 md:pb-0 mb-2 md:mb-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Animal / Lote</span>
                     <span className="font-bold text-slate-800">{r.animal ? r.animal.name : 'Animal Eliminado'}</span>
                   </td>
 
-                  {/* Tipo de Alimento */}
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-2 md:pb-0 mb-2 md:mb-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Insumo</span>
                     <div className="flex items-center gap-2">
@@ -158,13 +182,11 @@ export default function FeedingPage() {
                     </div>
                   </td>
 
-                  {/* Cantidad */}
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell border-b border-slate-50 md:border-none pb-2 md:pb-0 mb-2 md:mb-0 md:text-right">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Cantidad</span>
                     <span className="font-mono font-bold text-emerald-600">{r.quantity} kg</span>
                   </td>
 
-                  {/* Acciones */}
                   <td className="md:px-6 md:py-4 flex items-center justify-between md:table-cell pt-1 md:pt-0">
                     <span className="md:hidden text-[10px] font-bold text-slate-400 uppercase">Acciones</span>
                     <div className="flex justify-end gap-2">
@@ -174,14 +196,13 @@ export default function FeedingPage() {
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium">No hay registros de alimentación.</td></tr>
+                <tr><td colSpan="5" className="px-6 py-12 text-center text-slate-400 font-medium">{loading ? 'Cargando registros de alimentación...' : searchTerm ? 'No se encontraron registros de alimentación.' : 'No hay registros de alimentación.'}</td></tr>
               )}
             </tbody>
           </table>
         </div>
       </Card>
 
-      {/* MODAL RESPONSIVO */}
       {showModal && (
         <div className="fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
@@ -193,8 +214,6 @@ export default function FeedingPage() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {errorMsg && (<div className="p-3 rounded-lg bg-rose-50 border border-rose-200 text-sm font-bold text-rose-700">{errorMsg}</div>)}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  
-                  {/* Selector Dinámico de Animales */}
                   <div className="sm:col-span-2">
                     <label className="block text-xs font-bold text-slate-500 uppercase mb-1">Seleccionar Animal / Lote</label>
                     <select required className="w-full px-3 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500" value={formData.animal_id} onChange={e => setFormData({...formData, animal_id: e.target.value})}>
