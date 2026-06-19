@@ -48,21 +48,60 @@ export async function POST(req) {
 
     const data = parsed.data;
 
-    const record = await prisma.healthLog.create({
-      data: {
-        animal_id: data.animal_id,
-        diagnostic: data.diagnostic,
-        treatment: data.treatment,
-        date: data.date,
-      },
-      include: {
-        animal: true,
-      },
+    const record = await prisma.$transaction(async (tx) => {
+      const animal = await tx.animal.findUnique({
+        where: {
+          id: data.animal_id,
+        },
+      });
+
+      if (!animal) {
+        throw new Error('ANIMAL_NOT_FOUND');
+      }
+
+      if (animal.status === 'SOLD' || animal.status === 'DECEASED') {
+        throw new Error('ANIMAL_NOT_ACTIVE');
+      }
+
+      await tx.animal.update({
+        where: {
+          id: data.animal_id,
+        },
+        data: {
+          status: 'SICK',
+        },
+      });
+
+      return tx.healthLog.create({
+        data: {
+          animal_id: data.animal_id,
+          diagnostic: data.diagnostic,
+          treatment: data.treatment,
+          date: data.date,
+        },
+        include: {
+          animal: true,
+        },
+      });
     });
 
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
     console.error('Error POST HealthLog:', error);
+
+    if (error.message === 'ANIMAL_NOT_FOUND') {
+      return NextResponse.json(
+        { error: 'El animal seleccionado no existe.' },
+        { status: 404 }
+      );
+    }
+
+    if (error.message === 'ANIMAL_NOT_ACTIVE') {
+      return NextResponse.json(
+        { error: 'No se puede registrar tratamiento para un animal vendido o fallecido.' },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json(
       { error: 'Error al crear registro de salud' },
@@ -100,24 +139,63 @@ export async function PUT(req) {
 
     const data = parsed.data;
 
-    const record = await prisma.healthLog.update({
-      where: {
-        id,
-      },
-      data: {
-        animal_id: data.animal_id,
-        diagnostic: data.diagnostic,
-        treatment: data.treatment,
-        date: data.date,
-      },
-      include: {
-        animal: true,
-      },
+    const record = await prisma.$transaction(async (tx) => {
+      const animal = await tx.animal.findUnique({
+        where: {
+          id: data.animal_id,
+        },
+      });
+
+      if (!animal) {
+        throw new Error('ANIMAL_NOT_FOUND');
+      }
+
+      if (animal.status === 'SOLD' || animal.status === 'DECEASED') {
+        throw new Error('ANIMAL_NOT_ACTIVE');
+      }
+
+      await tx.animal.update({
+        where: {
+          id: data.animal_id,
+        },
+        data: {
+          status: 'SICK',
+        },
+      });
+
+      return tx.healthLog.update({
+        where: {
+          id,
+        },
+        data: {
+          animal_id: data.animal_id,
+          diagnostic: data.diagnostic,
+          treatment: data.treatment,
+          date: data.date,
+        },
+        include: {
+          animal: true,
+        },
+      });
     });
 
     return NextResponse.json(record);
   } catch (error) {
     console.error('Error PUT HealthLog:', error);
+
+    if (error.message === 'ANIMAL_NOT_FOUND') {
+      return NextResponse.json(
+        { error: 'El animal seleccionado no existe.' },
+        { status: 404 }
+      );
+    }
+
+    if (error.message === 'ANIMAL_NOT_ACTIVE') {
+      return NextResponse.json(
+        { error: 'No se puede registrar tratamiento para un animal vendido o fallecido.' },
+        { status: 400 }
+      );
+    }
 
     return NextResponse.json(
       { error: 'Error al actualizar registro de salud' },
