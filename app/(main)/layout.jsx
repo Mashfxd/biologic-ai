@@ -2,11 +2,11 @@
 import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { 
-  LayoutDashboard, Activity, Calendar, Stethoscope, 
-  TrendingUp, Users, LogOut, Bell, PawPrint, 
+import {
+  LayoutDashboard, Calendar, Stethoscope,
+  TrendingUp, Users, LogOut, Bell, PawPrint,
   Menu, X, Sun, Moon, Download,
-  ClipboardList, BarChart3
+  ClipboardList, BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -16,10 +16,10 @@ const SidebarItem = ({ icon: Icon, label, href, active, onClick }) => (
     onClick={onClick}
     aria-current={active ? 'page' : undefined}
     className={cn(
-      "flex items-center w-full gap-3 px-3 py-2 text-sm font-medium transition-all duration-150 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950",
+      'flex items-center w-full gap-3 px-3 py-2 text-sm font-medium transition-all duration-150 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-950',
       active
-        ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400"
-        : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
+        ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-400'
+        : 'text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800'
     )}
   >
     <Icon size={18} aria-hidden="true" focusable="false" />
@@ -32,75 +32,69 @@ export default function DashboardLayout({ children }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
-  
+
   const pathname = usePathname();
   const router = useRouter();
 
-  // 1. Cargar el Modo Oscuro al iniciar
   useEffect(() => {
-  const savedTheme = localStorage.getItem('zooai_theme');
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const savedTheme = localStorage.getItem('zooai_theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
-  const shouldUseDark = savedTheme
-    ? savedTheme === 'dark'
-    : prefersDark;
+    const shouldUseDark = savedTheme
+      ? savedTheme === 'dark'
+      : prefersDark;
 
-  setIsDarkMode(shouldUseDark);
-  document.documentElement.classList.toggle('dark', shouldUseDark);
-}, []);
+    setIsDarkMode(shouldUseDark);
+    document.documentElement.classList.toggle('dark', shouldUseDark);
+  }, []);
 
-  // 2. Función ESTRICTA para cambiar el Modo Oscuro
   const toggleTheme = () => {
-  setIsDarkMode((previousValue) => {
-    const nextValue = !previousValue;
+    setIsDarkMode((previousValue) => {
+      const nextValue = !previousValue;
 
-    document.documentElement.classList.toggle('dark', nextValue);
-    localStorage.setItem('zooai_theme', nextValue ? 'dark' : 'light');
+      document.documentElement.classList.toggle('dark', nextValue);
+      localStorage.setItem('zooai_theme', nextValue ? 'dark' : 'light');
 
-    return nextValue;
-  });
-};
-
-  // 3. Cerrar menús al cambiar de página
-  useEffect(() => {
-    setIsMobileMenuOpen(false);
-    setShowNotifications(false); 
-  }, [pathname]);
-
-  // 4. Validar Sesión
-  useEffect(() => {
-    const loadCurrentUser = async () => {
-    try {
-      const res = await fetch('/api/users/me');
-
-      if (!res.ok) {
-        localStorage.removeItem('zooai_user');
-        router.push('/');
-        return;
-      }
-
-      const data = await res.json();
-
-      setCurrentUser(data.user);
-      localStorage.setItem('zooai_user', JSON.stringify(data.user));
-    } catch (error) {
-      console.error('Error al validar sesión:', error);
-      localStorage.removeItem('zooai_user');
-      router.push('/');
-    }
+      return nextValue;
+    });
   };
 
-  loadCurrentUser();
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+    setShowNotifications(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const loadCurrentUser = async () => {
+      try {
+        const res = await fetch('/api/users/me');
+
+        if (!res.ok) {
+          localStorage.removeItem('zooai_user');
+          router.push('/');
+          return;
+        }
+
+        const data = await res.json();
+
+        setCurrentUser(data.user);
+        localStorage.setItem('zooai_user', JSON.stringify(data.user));
+      } catch (error) {
+        console.error('Error al validar sesión:', error);
+        localStorage.removeItem('zooai_user');
+        router.push('/');
+      }
+    };
+
+    loadCurrentUser();
   }, [router]);
 
   const handleLogout = async () => {
     try {
-      // 1. Avisamos al servidor que destruya la cookie segura
       await fetch('/api/users/logout', { method: 'POST' });
     } catch (error) {
-      console.error("Error al cerrar sesión", error);
+      console.error('Error al cerrar sesión', error);
     } finally {
-      // 2. Borramos el nombre estético y lo mandamos al inicio
       localStorage.removeItem('zooai_user');
       router.push('/');
     }
@@ -110,21 +104,19 @@ export default function DashboardLayout({ children }) {
     window.print();
   };
 
-  if (!currentUser) return null; 
+  if (!currentUser) return null;
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-900 font-sans overflow-hidden transition-colors duration-300">
       <a href="#contenido-principal" className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[100] focus:bg-white focus:text-slate-900 focus:px-4 focus:py-2 focus:rounded-lg focus:shadow-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">Saltar al contenido principal</a>
-      
-      {/* OVERLAY MÓVIL (Fondo oscuro al abrir menú en celular) */}
+
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-slate-900/50 z-40 lg:hidden" onClick={() => setIsMobileMenuOpen(false)} />
       )}
 
-      {/* SIDEBAR MODO CLARO / OSCURO */}
-      <aside   id="sidebar-principal" aria-label="Navegación principal" className={cn(
-        "fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0",
-        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+      <aside id="sidebar-principal" aria-label="Navegación principal" className={cn(
+        'fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-slate-950 border-r border-slate-200 dark:border-slate-800 flex flex-col transform transition-transform duration-300 ease-in-out lg:relative lg:translate-x-0',
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
       )}>
         <div className="p-6 flex items-center justify-between lg:justify-start gap-3">
           <div className="flex items-center gap-3">
@@ -133,9 +125,9 @@ export default function DashboardLayout({ children }) {
             </div>
             <span className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">BioLogic AI</span>
           </div>
-          <button type='button' onClick={() => setIsMobileMenuOpen(false)} aria-label="Cerrar menú" className="lg:hidden text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-           <X size={20} aria-hidden="true" focusable="false" />
-</button>
+          <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Cerrar menú" className="lg:hidden text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
+            <X size={20} aria-hidden="true" focusable="false" />
+          </button>
         </div>
 
         <nav aria-label="Menú principal" className="flex-1 px-4 space-y-1 overflow-y-auto pb-4 print:hidden">
@@ -160,7 +152,7 @@ export default function DashboardLayout({ children }) {
               <p className="text-[9px] text-slate-500 dark:text-slate-400 uppercase font-bold">{currentUser.role === 'ADMIN' ? 'Administrador' : 'Operador'}</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="mt-2 flex items-center w-full gap-2 px-3 py-1.5 text-[10px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-md transition-all uppercase">
+          <button type="button" onClick={handleLogout} className="mt-2 flex items-center w-full gap-2 px-3 py-1.5 text-[10px] font-bold text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-500/10 rounded-md transition-all uppercase">
             <LogOut size={14} /> Salir
           </button>
         </div>
@@ -170,64 +162,55 @@ export default function DashboardLayout({ children }) {
         <header className="h-16 bg-white dark:bg-slate-950 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between px-4 lg:px-8 shrink-0 print:hidden transition-colors duration-300">
           <div className="flex items-center gap-2 lg:gap-4 flex-1">
             <button type="button" onClick={() => setIsMobileMenuOpen(true)} aria-label="Abrir menú" aria-expanded={isMobileMenuOpen} aria-controls="sidebar-principal" className="p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg lg:hidden focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
-  <Menu size={24} aria-hidden="true" focusable="false" />
-</button>
-            <div className="hidden sm:flex items-center gap-4 bg-slate-100 dark:bg-slate-900 px-3 py-1.5 rounded-full w-full max-w-sm">
-              <LayoutDashboard size={14} className="text-slate-400" />
-              <input type="text" placeholder="Buscar lote o alerta..." className="bg-transparent border-none text-[12px] w-full outline-none text-slate-600 dark:text-slate-300 font-medium placeholder-slate-400" />
-            </div>
+              <Menu size={24} aria-hidden="true" focusable="false" />
+            </button>
           </div>
 
           <div className="flex items-center gap-2 lg:gap-4 relative">
-            
-            {/* BOTÓN DE MODO OSCURO */}
             <button
-               type="button"
-               onClick={toggleTheme}
-               aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
-               aria-pressed={isDarkMode}
-               className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-             >
-             {isDarkMode ? (
-              <Sun size={20} className="text-amber-400" aria-hidden="true" focusable="false" />
+              type="button"
+              onClick={toggleTheme}
+              aria-label={isDarkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}
+              aria-pressed={isDarkMode}
+              className="p-2 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+            >
+              {isDarkMode ? (
+                <Sun size={20} className="text-amber-400" aria-hidden="true" focusable="false" />
               ) : (
-              <Moon size={20} aria-hidden="true" focusable="false" />
+                <Moon size={20} aria-hidden="true" focusable="false" />
               )}
-             </button>
+            </button>
 
-            {/* BOTÓN REPORTE */}
             <button
               type="button"
               onClick={handleReport}
-              className="hidden md:flex items-center gap-2 bg-emerald-600 text-white text-[11px] font-bold px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">
+              className="hidden md:flex items-center gap-2 bg-emerald-600 text-white text-[11px] font-bold px-4 py-2 rounded-md hover:bg-emerald-700 transition-colors shadow-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2"
+            >
               <Download size={14} aria-hidden="true" focusable="false" />
-             Reporte PDF
-             </button>
+              Imprimir Reporte
+            </button>
 
-            {/* CAMPANITA DE NOTIFICACIONES */}
             <div className="relative">
               <button
-               type="button"
-               onClick={() => setShowNotifications(!showNotifications)}
-               aria-label="Ver notificaciones"
-               aria-expanded={showNotifications}
-               aria-controls="panel-notificaciones"
-               className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg relative transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">             
-               <Bell size={20} aria-hidden="true" focusable="false" />
-               <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-950 animate-pulse" />
+                type="button"
+                onClick={() => setShowNotifications(!showNotifications)}
+                aria-label="Ver notificaciones"
+                aria-expanded={showNotifications}
+                aria-controls="panel-notificaciones"
+                className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg relative transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+              >
+                <Bell size={20} aria-hidden="true" focusable="false" />
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-950 animate-pulse" />
               </button>
 
-              {/* LÓGICA DE NOTIFICACIONES CON CIERRE AL CLIC AFUERA */}
               {showNotifications && (
                 <>
-                  {/* Capa invisible para detectar el clic fuera del menú */}
-                  <div 
-                    className="fixed inset-0 z-40" 
+                  <div
+                    className="fixed inset-0 z-40"
                     onClick={() => setShowNotifications(false)}
-                  ></div>
+                  />
 
-                  {/* Panel del Menú */}
-                  <div id="panel-notificaciones" role="region" aria-label='Notificaciones' className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden">
+                  <div id="panel-notificaciones" role="region" aria-label="Notificaciones" className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden">
                     <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">Notificaciones</h4>
                       <span className="text-[10px] bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 px-2 py-0.5 rounded-full font-bold">2 Nuevas</span>
@@ -250,8 +233,7 @@ export default function DashboardLayout({ children }) {
             </div>
           </div>
         </header>
-        
-        {/* ÁREA DE LAS PÁGINAS */}
+
         <div className="flex-1 overflow-y-auto p-4 md:p-8 bg-[#F8FAFC] dark:bg-slate-900 transition-colors duration-300">
           {children}
         </div>
