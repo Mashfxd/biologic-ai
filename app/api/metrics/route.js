@@ -47,7 +47,7 @@ export async function GET() {
       },
     });
 
-    // Peso promedio actual de animales vivos en granja
+    // Peso promedio actual de animales vivos en granja, expresado en gramos
     const weightStats = await prisma.animal.aggregate({
       where: {
         status: { in: ['HEALTHY', 'SICK'] },
@@ -77,7 +77,8 @@ export async function GET() {
 
     const totalFoodKg = Number(feedingStats._sum.quantity || 0);
 
-    // Historial de crecimiento ordenado por animal y fecha
+    // Historial de crecimiento ordenado por animal y fecha.
+    // Los pesos se registran en gramos para coincidir con Inventario y alertas de empadre.
     const growthRecords = await prisma.growthLog.findMany({
       orderBy: [
         {
@@ -105,7 +106,7 @@ export async function GET() {
       growthByAnimal.get(record.animal_id).push(record);
     }
 
-    let totalWeightGainKg = 0;
+    let totalWeightGainGrams = 0;
     let animalsWithValidGrowth = 0;
 
     for (const records of growthByAnimal.values()) {
@@ -113,13 +114,15 @@ export async function GET() {
 
       const firstRecord = records[0];
       const lastRecord = records[records.length - 1];
-      const gain = Number(lastRecord.weight || 0) - Number(firstRecord.weight || 0);
+      const gainGrams = Number(lastRecord.weight || 0) - Number(firstRecord.weight || 0);
 
-      if (gain > 0) {
-        totalWeightGainKg += gain;
+      if (gainGrams > 0) {
+        totalWeightGainGrams += gainGrams;
         animalsWithValidGrowth += 1;
       }
     }
+
+    const totalWeightGainKg = totalWeightGainGrams / 1000;
 
     const ica =
       totalFoodKg > 0 && totalWeightGainKg > 0
@@ -177,6 +180,7 @@ export async function GET() {
         eficiencia: {
           alimentoTotalKg: totalFoodKg.toFixed(2),
           gananciaPesoTotalKg: totalWeightGainKg.toFixed(2),
+          gananciaPesoTotalGramos: totalWeightGainGrams.toFixed(2),
           animalesConCrecimientoValido: animalsWithValidGrowth,
           indiceConversionAlimenticia: ica > 0 ? ica.toFixed(2) : '0.00',
           interpretacionICA: getIcaInterpretation(ica),
