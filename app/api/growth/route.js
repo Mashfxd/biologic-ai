@@ -3,6 +3,36 @@ import prisma from '@/lib/prisma';
 import { growthLogSchema } from '@/lib/validations';
 import { requireAuth } from '@/lib/auth';
 
+async function syncAnimalCurrentWeight(tx, animalId) {
+  const latestGrowth = await tx.growthLog.findFirst({
+    where: {
+      animal_id: animalId,
+    },
+    orderBy: [
+      {
+        date: 'desc',
+      },
+      {
+        id: 'desc',
+      },
+    ],
+    select: {
+      weight: true,
+    },
+  });
+
+  if (!latestGrowth) return;
+
+  await tx.animal.update({
+    where: {
+      id: animalId,
+    },
+    data: {
+      currentWeight: latestGrowth.weight,
+    },
+  });
+}
+
 export async function GET() {
   const { response } = await requireAuth();
   if (response) return response;
@@ -48,24 +78,21 @@ export async function POST(req) {
 
     const data = parsed.data;
 
-    const record = await prisma.growthLog.create({
-      data: {
-        animal_id: data.animal_id,
-        weight: data.weight,
-        date: data.date,
-      },
-      include: {
-        animal: true,
-      },
-    });
+    const record = await prisma.$transaction(async (tx) => {
+      const createdRecord = await tx.growthLog.create({
+        data: {
+          animal_id: data.animal_id,
+          weight: data.weight,
+          date: data.date,
+        },
+        include: {
+          animal: true,
+        },
+      });
 
-    await prisma.animal.update({
-      where: {
-        id: data.animal_id,
-      },
-      data: {
-        currentWeight: data.weight,
-      },
+      await syncAnimalCurrentWeight(tx, data.animal_id);
+
+      return createdRecord;
     });
 
     return NextResponse.json(record, { status: 201 });
@@ -108,27 +135,37 @@ export async function PUT(req) {
 
     const data = parsed.data;
 
-    const record = await prisma.growthLog.update({
-      where: {
-        id,
-      },
-      data: {
-        animal_id: data.animal_id,
-        weight: data.weight,
-        date: data.date,
-      },
-      include: {
-        animal: true,
-      },
-    });
+    const record = await prisma.$transaction(async (tx) => {
+      const previousRecord = await tx.growthLog.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          animal_id: true,
+        },
+      });
 
-    await prisma.animal.update({
-      where: {
-        id: data.animal_id,
-      },
-      data: {
-        currentWeight: data.weight,
-      },
+      const updatedRecord = await tx.growthLog.update({
+        where: {
+          id,
+        },
+        data: {
+          animal_id: data.animal_id,
+          weight: data.weight,
+          date: data.date,
+        },
+        include: {
+          animal: true,
+        },
+      });
+
+      if (previousRecord?.animal_id && previousRecord.animal_id !== data.animal_id) {
+        await syncAnimalCurrentWeight(tx, previousRecord.animal_id);
+      }
+
+      await syncAnimalCurrentWeight(tx, data.animal_id);
+
+      return updatedRecord;
     });
 
     return NextResponse.json(record);
@@ -157,10 +194,25 @@ export async function DELETE(req) {
       );
     }
 
-    await prisma.growthLog.delete({
-      where: {
-        id,
-      },
+    await prisma.$transaction(async (tx) => {
+      const record = await tx.growthLog.findUnique({
+        where: {
+          id,
+        },
+        select: {
+          animal_id: true,
+        },
+      });
+
+      await tx.growthLog.delete({
+        where: {
+          id,
+        },
+      });
+
+      if (record?.animal_id) {
+        await syncAnimalCurrentWeight(tx, record.animal_id);
+      }
     });
 
     return NextResponse.json({
