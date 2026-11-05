@@ -1,23 +1,8 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { requireAdmin } from '@/lib/auth';
-
-const createUserSchema = z.object({
-  username: z.string().trim().min(3, 'El usuario debe tener al menos 3 caracteres'),
-  email: z.string().trim().email('Email inválido'),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres'),
-  role: z.enum(['ADMIN', 'OPERATOR']).default('OPERATOR'),
-});
-
-const updateUserSchema = z.object({
-  id: z.coerce.number().int().positive('ID inválido'),
-  username: z.string().trim().min(3, 'El usuario debe tener al menos 3 caracteres'),
-  email: z.string().trim().email('Email inválido'),
-  role: z.enum(['ADMIN', 'OPERATOR']),
-  password: z.string().min(6, 'La contraseña debe tener al menos 6 caracteres').optional().or(z.literal('')),
-});
+import { createUserSchema, updateUserSchema } from '@/lib/validations';
 
 export async function GET() {
   const { response } = await requireAdmin();

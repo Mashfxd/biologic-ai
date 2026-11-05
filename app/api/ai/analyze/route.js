@@ -1,37 +1,112 @@
 import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { requireAuth } from '@/lib/auth';
+import { analyzeProduction } from '@/lib/geminiService';
 
 export async function POST(req) {
+  const { response } = await requireAuth();
+  if (response) return response;
+
   try {
-    const body = await req.json();
-    const numAnimals = body.animals?.length || 0;
-    const numGrowth = body.growth?.length || 0;
-
-    // Base de conocimientos experta para el simulador
-    const consejos = [
-      "Se observa un patrón estable. Se recomienda aumentar el forraje verde un 5% para mejorar la conversión alimenticia.",
-      "Atención: Los registros de peso sugieren que el Lote actual podría alcanzar el peso de mercado en 2 semanas. Prepare el área de despacho.",
-      "Recomendación técnica: Mantener la temperatura del galpón entre 18°C y 24°C para evitar el estrés térmico en las crías.",
-      "Análisis BioLogic: La relación entre alimentación y ganancia de peso es óptima. Mantenga el cronograma de desparasitación.",
-      "Consejo del experto: El registro de salud muestra estabilidad. Sugerimos rotar el tipo de concentrado para evitar el rechazo por palatabilidad."
-    ];
-
-    // Lógica: Si no hay animales, pide registros. Si hay, da un consejo aleatorio.
-    let respuesta;
-    if (numAnimals === 0) {
-      respuesta = "El cerebro de BioLogic AI está listo. Por favor, registra tu primer animal para iniciar el análisis técnico.";
-    } else if (numGrowth === 0) {
-      respuesta = `He detectado ${numAnimals} animales. Para darte consejos de crecimiento, necesito que registres el primer pesaje en el módulo de Crecimiento.`;
-    } else {
-      // Elige un consejo aleatorio para que parezca que la IA está pensando
-      respuesta = consejos[Math.floor(Math.random() * consejos.length)];
+    let clientMetrics = null;
+    try {
+      const body = await req.json();
+      clientMetrics = body?.metrics || null;
+    } catch {
+      // Body opcional
     }
 
-    // Simulamos un pequeño retraso para que el usuario sienta que la IA está "procesando"
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    const [animals, growthLogs, feedingLogs, healthLogs, totalCount, deceasedCount, productionAgg] =
+      await Promise.all([
+        prisma.animal.findMany({
+          take: 15,
+          orderBy: { updatedAt: 'desc' },
+          select: {
+            id: true,
+            name: true,
+            species: true,
+            breed: true,
+            gender: true,
+            status: true,
+            currentWeight: true,
+            purpose: true,
+          },
+        }),
+        prisma.growthLog.findMany({
+          take: 20,
+          orderBy: { date: 'desc' },
+          select: {
+            animal_id: true,
+            weight: true,
+            date: true,
+          },
+        }),
+        prisma.feedingLog.findMany({
+          take: 20,
+          orderBy: { date: 'desc' },
+          select: {
+            animal_id: true,
+            food_type: true,
+            quantity: true,
+            date: true,
+          },
+        }),
+        prisma.healthLog.findMany({
+          take: 10,
+          orderBy: { date: 'desc' },
+          select: {
+            animal_id: true,
+            diagnostic: true,
+            treatment: true,
+            date: true,
+          },
+        }),
+        prisma.animal.count(),
+        prisma.animal.count({ where: { status: 'DECEASED' } }),
+        prisma.reproductionLog.aggregate({
+          _sum: { bornAlive: true },
+          _avg: { bornAlive: true },
+        }),
+      ]);
 
-    return NextResponse.json({ analysis: respuesta });
+    const activeAnimals = animals.filter(
+      (a) => a.status === 'HEALTHY' || a.status === 'SICK'
+    );
+    const sickAnimalsCount = animals.filter((a) => a.status === 'SICK').length;
 
+    const summary = {
+      activePopulation:
+        Number(clientMetrics?.poblacionActiva) || activeAnimals.length,
+      sickAnimals:
+        Number(clientMetrics?.animalesEnfermos) || sickAnimalsCount,
+      morbidityRate: Number(clientMetrics?.tasaMorbilidad || 0),
+      mortalityRate:
+        Number(clientMetrics?.tasaMortalidad) ||
+        (totalCount > 0 ? Number(((deceasedCount / totalCount) * 100).toFixed(1)) : 0),
+      avgCurrentWeight: Number(clientMetrics?.pesoPromedioActual || 0),
+      totalBirths:
+        Number(clientMetrics?.produccion?.totalCrias) ||
+        Number(productionAgg._sum.bornAlive || 0),
+      avgBirthsPerDelivery:
+        Number(clientMetrics?.produccion?.promedioCriasPorParto) ||
+        Number((productionAgg._avg.bornAlive || 0).toFixed(1)),
+      ica: Number(clientMetrics?.eficiencia?.indiceConversionAlimenticia || 0),
+    };
+
+    const result = await analyzeProduction({
+      animals,
+      growthLogs,
+      feedingLogs,
+      healthLogs,
+      summary,
+    });
+
+    return NextResponse.json(result);
   } catch (error) {
-    return NextResponse.json({ analysis: "El módulo de IA se está sincronizando. Intenta en un momento." });
+    console.error('Error en /api/ai/analyze:', error);
+    return NextResponse.json(
+      { error: 'No se pudo generar el análisis zootécnico en este momento.' },
+      { status: 500 }
+    );
   }
 }

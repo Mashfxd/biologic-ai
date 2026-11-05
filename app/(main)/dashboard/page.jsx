@@ -15,6 +15,7 @@ export default function DashboardPage() {
   const [currentUser, setCurrentUser] = useState(null);
   const [aiAnalysis, setAiAnalysis] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   useEffect(() => {
     fetchMetrics();
@@ -131,6 +132,35 @@ export default function DashboardPage() {
     setAiAnalysis(messages.join(' '));
   };
 
+  const handleAiAnalysis = async () => {
+    if (!metrics || isAnalyzing) return;
+
+    setIsAnalyzing(true);
+
+    try {
+      const res = await fetch('/api/ai/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ metrics }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data?.analysis) {
+          setAiAnalysis(data.analysis);
+          return;
+        }
+      }
+
+      handleBasicAiAnalysis();
+    } catch (error) {
+      console.error('Error al solicitar análisis IA:', error);
+      handleBasicAiAnalysis();
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[400px] text-slate-400">
@@ -232,10 +262,18 @@ export default function DashboardPage() {
               </div>
               <button
                 type="button"
-                onClick={handleBasicAiAnalysis}
-                className="w-full bg-emerald-600 text-white text-[10px] font-bold py-3 px-6 rounded-lg hover:bg-emerald-500 transition-all uppercase focus-visible:ring-2 focus-visible:ring-emerald-400 outline-none"
+                onClick={handleAiAnalysis}
+                disabled={isAnalyzing}
+                className="w-full flex items-center justify-center gap-2 bg-emerald-600 text-white text-[10px] font-bold py-3 px-6 rounded-lg hover:bg-emerald-500 disabled:opacity-60 disabled:cursor-not-allowed transition-all uppercase focus-visible:ring-2 focus-visible:ring-emerald-400 outline-none"
               >
-                Analizar Producción
+                {isAnalyzing ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Analizando con IA...
+                  </>
+                ) : (
+                  'Analizar Producción'
+                )}
               </button>
             </div>
           </div>

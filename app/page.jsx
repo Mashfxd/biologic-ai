@@ -33,12 +33,22 @@ export default function LoginPage() {
     }
   };
 
-  // 3. Revisar si ya hay sesión iniciada
+  // 3. Revisar si ya hay sesión válida en el servidor (evita bucle infinito si la cookie expiró)
   useEffect(() => {
     const savedUser = localStorage.getItem('zooai_user');
-    if (savedUser) {
-      router.push('/dashboard');
-    }
+    if (!savedUser) return;
+
+    fetch('/api/users/me')
+      .then((res) => {
+        if (res.ok) {
+          router.push('/dashboard');
+        } else {
+          localStorage.removeItem('zooai_user');
+        }
+      })
+      .catch(() => {
+        localStorage.removeItem('zooai_user');
+      });
   }, [router]);
 
   const handleLogin = async (e) => {

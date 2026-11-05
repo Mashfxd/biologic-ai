@@ -36,7 +36,25 @@ export async function proxy(request) {
       );
     }
 
-    return NextResponse.redirect(new URL('/', request.url));
+    const redirectResponse = NextResponse.redirect(new URL('/', request.url));
+    redirectResponse.cookies.delete('zooai_session');
+    return redirectResponse;
+  }
+
+  // Protección de rol Administrador (RBAC) en el límite de red
+  const isAdminPage = pathname.startsWith('/users');
+  const isAdminApi =
+    pathname.startsWith('/api/users') && pathname !== '/api/users/me';
+
+  if ((isAdminPage || isAdminApi) && verifiedToken.role !== 'ADMIN') {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json(
+        { error: 'Acceso prohibido. Se requiere rol administrador.' },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return NextResponse.next();
@@ -59,5 +77,6 @@ export const config = {
     '/api/growth/:path*',
     '/api/production/:path*',
     '/api/metrics/:path*',
+    '/api/ai/:path*',
   ],
 };

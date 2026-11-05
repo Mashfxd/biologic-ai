@@ -1,5 +1,5 @@
 {
-  "name": "zoo-ai-next",
+  "name": "biologic-ai",
   "version": "1.0.0",
   "private": true,
   "scripts": {
@@ -7,11 +7,11 @@
     "build": "next build",
     "start": "next start --hostname 0.0.0.0 --port 3000",
     "lint": "next lint",
+    "seed": "node prisma/seed.js",
     "postinstall": "prisma generate"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
-    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "^6.4.1",
     "@tailwindcss/postcss": "^4.0.0",
     "bcryptjs": "^3.0.3",

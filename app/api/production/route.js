@@ -1,55 +1,7 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
-
-const productionSchema = z.object({
-  poza: z.string().trim().min(1, 'La poza es obligatoria'),
-
-  motherId: z.coerce
-    .number()
-    .int('El ID de la madre debe ser un número entero')
-    .positive('La madre es obligatoria'),
-
-  fatherId: z
-    .union([
-      z.coerce.number().int().positive(),
-      z.literal(''),
-      z.null(),
-      z.undefined(),
-    ])
-    .optional(),
-
-  matingDate: z
-    .union([
-      z.coerce.date(),
-      z.literal(''),
-      z.null(),
-      z.undefined(),
-    ])
-    .optional(),
-
-  birthDate: z.coerce.date({
-    message: 'La fecha de parto no es válida',
-  }),
-
-  bornAlive: z.coerce
-    .number()
-    .int('Los nacidos vivos deben ser un número entero')
-    .min(0, 'Los nacidos vivos no pueden ser negativos'),
-
-  bornDead: z.coerce
-    .number()
-    .int('Los nacidos muertos deben ser un número entero')
-    .min(0, 'Los nacidos muertos no pueden ser negativos')
-    .default(0),
-
-  avgBirthWeight: z.coerce
-    .number()
-    .positive('El peso promedio debe ser mayor a 0'),
-
-  observations: z.string().trim().optional(),
-});
+import { productionSchema } from '@/lib/validations';
 
 const productionInclude = {
   mother: {

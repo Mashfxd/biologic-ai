@@ -109,7 +109,13 @@ export default function AnimalsPage() {
 
     try {
       const res = await fetch(`/api/animals?id=${id}`, { method: 'DELETE' });
-      if (res.ok) fetchAnimals();
+      const data = await res.json().catch(() => ({}));
+
+      if (res.ok) {
+        fetchAnimals();
+      } else {
+        alert(data.error || 'No se pudo eliminar el animal');
+      }
     } catch (error) {
       alert('Error de conexión');
     }
@@ -131,11 +137,13 @@ export default function AnimalsPage() {
         body: JSON.stringify(isUpdating ? { ...payload, id: editingId } : payload),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
         setShowModal(false);
         fetchAnimals();
       } else {
-        alert('Error al guardar el animal');
+        alert(data.error || 'Error al guardar el animal');
       }
     } catch (error) {
       alert('Error de conexión');

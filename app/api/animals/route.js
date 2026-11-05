@@ -1,27 +1,7 @@
 import { NextResponse } from 'next/server';
-import { z } from 'zod';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
-
-const animalSchema = z.object({
-  name: z.string().trim().min(1, 'El código o nombre es obligatorio'),
-  species: z.string().trim().min(1, 'La especie es obligatoria'),
-  breed: z.string().trim().min(1, 'La raza es obligatoria'),
-  birthDate: z.coerce.date({
-    message: 'La fecha de nacimiento no es válida',
-  }),
-  gender: z.enum(['HEMBRA', 'MACHO'], {
-    message: 'El sexo debe ser HEMBRA o MACHO',
-  }),
-  status: z.enum(['HEALTHY', 'SICK', 'SOLD', 'DECEASED'], {
-    message: 'El estado no es válido',
-  }),
-  purpose: z.string().trim().optional().default('Engorde'),
-  litterCode: z.string().trim().optional().nullable(),
-  currentWeight: z.coerce
-    .number()
-    .positive('El peso debe ser mayor a 0'),
-});
+import { animalSchema } from '@/lib/validations';
 
 export async function GET() {
   const { response } = await requireAuth();
@@ -136,6 +116,13 @@ export async function PUT(req) {
   } catch (error) {
     console.error('Error en PUT:', error);
 
+    if (error?.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'El animal que intentas actualizar no existe' },
+        { status: 404 }
+      );
+    }
+
     return NextResponse.json(
       { error: 'Error al actualizar animal' },
       { status: 500 }
@@ -158,15 +145,68 @@ export async function DELETE(req) {
       );
     }
 
-    await prisma.animal.delete({
+    const existingAnimal = await prisma.animal.findUnique({
       where: { id },
+      select: {
+        id: true,
+        _count: {
+          select: {
+            partosComoMadre: true,
+          },
+        },
+      },
     });
+
+    if (!existingAnimal) {
+      return NextResponse.json(
+        { error: 'El animal no existe o ya fue eliminado' },
+        { status: 404 }
+      );
+    }
+
+    if (existingAnimal._count.partosComoMadre > 0) {
+      return NextResponse.json(
+        {
+          error:
+            'No se puede eliminar físicamente este animal porque registra partos como madre en el historial reproductivo. Cambia su estado a Vendido o Fallecido para conservar la trazabilidad.',
+        },
+        { status: 409 }
+      );
+    }
+
+    await prisma.$transaction([
+      prisma.healthLog.deleteMany({ where: { animal_id: id } }),
+      prisma.growthLog.deleteMany({ where: { animal_id: id } }),
+      prisma.feedingLog.deleteMany({ where: { animal_id: id } }),
+      prisma.reproductionLog.updateMany({
+        where: { fatherId: id },
+        data: { fatherId: null },
+      }),
+      prisma.animal.delete({ where: { id } }),
+    ]);
 
     return NextResponse.json({
       message: 'Eliminado correctamente',
     });
   } catch (error) {
     console.error('Error al eliminar animal:', error);
+
+    if (error?.code === 'P2003') {
+      return NextResponse.json(
+        {
+          error:
+            'No se puede eliminar el animal porque tiene registros históricos asociados. Cambia su estado a Vendido o Fallecido.',
+        },
+        { status: 409 }
+      );
+    }
+
+    if (error?.code === 'P2025') {
+      return NextResponse.json(
+        { error: 'El animal ya no existe' },
+        { status: 404 }
+      );
+    }
 
     return NextResponse.json(
       { error: 'Error al eliminar animal' },
