@@ -104,7 +104,7 @@ export async function POST(req) {
 
       // 3. ¡EL ESCUDO!: Inyectamos el Token como una Cookie HttpOnly
       response.cookies.set({
-        name: 'zooai_session',
+        name: 'biologic_session',
         value: token,
         httpOnly: true, // Invisible para ataques XSS (JavaScript no puede leerla)
         secure: process.env.NODE_ENV === 'production', // En Vercel exigirá HTTPS

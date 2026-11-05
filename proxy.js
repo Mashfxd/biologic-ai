@@ -13,7 +13,7 @@ export async function proxy(request) {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get('zooai_session')?.value;
+  const token = request.cookies.get('biologic_session')?.value;
 
   if (!token) {
     if (pathname.startsWith('/api/')) {
@@ -37,7 +37,7 @@ export async function proxy(request) {
     }
 
     const redirectResponse = NextResponse.redirect(new URL('/', request.url));
-    redirectResponse.cookies.delete('zooai_session');
+    redirectResponse.cookies.delete('biologic_session');
     return redirectResponse;
   }
 

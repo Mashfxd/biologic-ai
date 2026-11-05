@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard, Calendar, Stethoscope,
-  TrendingUp, Users, LogOut, Bell, PawPrint,
+  TrendingUp, Users, LogOut, Bell,
   Menu, X, Sun, Moon, Download,
   ClipboardList, BarChart3,
 } from 'lucide-react';
@@ -37,7 +37,7 @@ export default function DashboardLayout({ children }) {
   const router = useRouter();
 
   useEffect(() => {
-    const savedTheme = localStorage.getItem('zooai_theme');
+    const savedTheme = localStorage.getItem('biologic_theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     const shouldUseDark = savedTheme
@@ -53,7 +53,7 @@ export default function DashboardLayout({ children }) {
       const nextValue = !previousValue;
 
       document.documentElement.classList.toggle('dark', nextValue);
-      localStorage.setItem('zooai_theme', nextValue ? 'dark' : 'light');
+      localStorage.setItem('biologic_theme', nextValue ? 'dark' : 'light');
 
       return nextValue;
     });
@@ -70,7 +70,7 @@ export default function DashboardLayout({ children }) {
         const res = await fetch('/api/users/me');
 
         if (!res.ok) {
-          localStorage.removeItem('zooai_user');
+          localStorage.removeItem('biologic_user');
           router.push('/');
           return;
         }
@@ -78,10 +78,10 @@ export default function DashboardLayout({ children }) {
         const data = await res.json();
 
         setCurrentUser(data.user);
-        localStorage.setItem('zooai_user', JSON.stringify(data.user));
+        localStorage.setItem('biologic_user', JSON.stringify(data.user));
       } catch (error) {
         console.error('Error al validar sesión:', error);
-        localStorage.removeItem('zooai_user');
+        localStorage.removeItem('biologic_user');
         router.push('/');
       }
     };
@@ -95,7 +95,7 @@ export default function DashboardLayout({ children }) {
     } catch (error) {
       console.error('Error al cerrar sesión', error);
     } finally {
-      localStorage.removeItem('zooai_user');
+      localStorage.removeItem('biologic_user');
       router.push('/');
     }
   };
@@ -120,9 +120,11 @@ export default function DashboardLayout({ children }) {
       )}>
         <div className="p-6 flex items-center justify-between lg:justify-start gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
-              <PawPrint size={18} className="text-white" />
-            </div>
+            <img
+              src="/logo.jpg"
+              alt="Logo SERPAR"
+              className="w-9 h-9 rounded-lg object-contain bg-white p-0.5 shadow-sm shrink-0"
+            />
             <span className="text-lg font-bold text-slate-800 dark:text-white tracking-tight">BioLogic AI</span>
           </div>
           <button type="button" onClick={() => setIsMobileMenuOpen(false)} aria-label="Cerrar menú" className="lg:hidden text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 p-1 rounded-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">

@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { PawPrint, Sun, Moon } from 'lucide-react';
+import { Sun, Moon } from 'lucide-react';
 import { motion } from 'motion/react';
 import Card from '@/components/ui/Card';
 
@@ -13,29 +13,27 @@ export default function LoginPage() {
 
   // 1. Revisar si el usuario ya tenía el modo oscuro activado antes
   useEffect(() => {
-    const theme = localStorage.getItem('zooai_theme');
-    if (theme === 'dark') {
-      setIsDarkMode(true);
-      document.documentElement.classList.add('dark');
-    }
+    const savedTheme = localStorage.getItem('biologic_theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldUseDark = savedTheme ? savedTheme === 'dark' : prefersDark;
+
+    setIsDarkMode(shouldUseDark);
+    document.documentElement.classList.toggle('dark', shouldUseDark);
   }, []);
 
   // 2. Función para cambiar el tema desde el Login
   const toggleTheme = () => {
-    if (isDarkMode) {
-      document.documentElement.classList.remove('dark');
-      localStorage.setItem('zooai_theme', 'light');
-      setIsDarkMode(false);
-    } else {
-      document.documentElement.classList.add('dark');
-      localStorage.setItem('zooai_theme', 'dark');
-      setIsDarkMode(true);
-    }
+    setIsDarkMode((prev) => {
+      const nextValue = !prev;
+      document.documentElement.classList.toggle('dark', nextValue);
+      localStorage.setItem('biologic_theme', nextValue ? 'dark' : 'light');
+      return nextValue;
+    });
   };
 
   // 3. Revisar si ya hay sesión válida en el servidor (evita bucle infinito si la cookie expiró)
   useEffect(() => {
-    const savedUser = localStorage.getItem('zooai_user');
+    const savedUser = localStorage.getItem('biologic_user');
     if (!savedUser) return;
 
     fetch('/api/users/me')
@@ -43,11 +41,11 @@ export default function LoginPage() {
         if (res.ok) {
           router.push('/dashboard');
         } else {
-          localStorage.removeItem('zooai_user');
+          localStorage.removeItem('biologic_user');
         }
       })
       .catch(() => {
-        localStorage.removeItem('zooai_user');
+        localStorage.removeItem('biologic_user');
       });
   }, [router]);
 
@@ -66,7 +64,7 @@ export default function LoginPage() {
 
       if (res.ok) {
         const data = await res.json();
-        localStorage.setItem('zooai_user', JSON.stringify(data.user));
+        localStorage.setItem('biologic_user', JSON.stringify(data.user));
         router.push('/dashboard'); 
       } else {
         alert('Credenciales inválidas.');

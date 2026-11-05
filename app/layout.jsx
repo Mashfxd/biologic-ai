@@ -3,6 +3,9 @@ import './globals.css';
 export const metadata = {
   title: 'BioLogic AI - Producción Animal',
   description: 'Sistema de gestión con IA para la optimización de producción de animales menores.',
+  icons: {
+    icon: '/logo.jpg',
+  },
 };
 
 export default function RootLayout({ children }) {

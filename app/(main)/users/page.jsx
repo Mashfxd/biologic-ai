@@ -34,7 +34,7 @@ export default function UsersPage() {
 
   const [currentUserRole, setCurrentUserRole] = useState(() => {
     if (typeof window !== 'undefined') {
-      const stored = localStorage.getItem('zooai_user');
+      const stored = localStorage.getItem('biologic_user');
       if (stored) {
         const user = JSON.parse(stored);
         return user.role?.toUpperCase() || 'OPERATOR';
@@ -49,7 +49,7 @@ export default function UsersPage() {
 
   useEffect(() => {
     fetchUsers();
-    const storedUser = localStorage.getItem('zooai_user');
+    const storedUser = localStorage.getItem('biologic_user');
     if (storedUser) {
       const user = JSON.parse(storedUser);
       setCurrentUserRole(String(user.role || '').trim().toUpperCase());

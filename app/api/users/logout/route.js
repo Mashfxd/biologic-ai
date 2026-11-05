@@ -4,7 +4,7 @@ export async function POST() {
   const response = NextResponse.json({ success: true });
 
   response.cookies.set({
-    name: 'zooai_session',
+    name: 'biologic_session',
     value: '',
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',

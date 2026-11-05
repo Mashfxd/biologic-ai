@@ -20,7 +20,7 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchMetrics();
 
-    const savedUser = localStorage.getItem('zooai_user');
+    const savedUser = localStorage.getItem('biologic_user');
     if (savedUser) setCurrentUser(JSON.parse(savedUser));
   }, []);
 
