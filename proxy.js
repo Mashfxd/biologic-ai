@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { verifyToken } from './lib/jwt';
+import { getSessionUser } from './lib/auth';
 
 const publicApiRoutes = [
   '/api/users/login',
@@ -26,7 +26,7 @@ export async function proxy(request) {
     return NextResponse.redirect(new URL('/', request.url));
   }
 
-  const verifiedToken = await verifyToken(token);
+  const verifiedToken = await getSessionUser();
 
   if (!verifiedToken) {
     if (pathname.startsWith('/api/')) {

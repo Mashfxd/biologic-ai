@@ -16,10 +16,7 @@ export default function HealthPage() {
     animal_id: '', diagnostic: '', treatment: '', date: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => {
-    fetchRecords();
-    fetchAnimals();
-  }, []);
+
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -45,6 +42,11 @@ export default function HealthPage() {
       setAnimals([]);
     }
   };
+
+  useEffect(() => {
+    fetchRecords();
+    fetchAnimals();
+  }, []);
 
   const handleOpenModal = (record = null) => {
     if (record) {

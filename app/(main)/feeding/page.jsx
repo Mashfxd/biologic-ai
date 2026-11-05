@@ -16,10 +16,7 @@ export default function FeedingPage() {
     animal_id: '', food_type: 'Concentrado', quantity: '', date: new Date().toISOString().split('T')[0]
   });
 
-  useEffect(() => {
-    fetchRecords();
-    fetchAnimals();
-  }, []);
+
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -43,6 +40,11 @@ export default function FeedingPage() {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    fetchRecords();
+    fetchAnimals();
+  }, []);
 
   const handleOpenModal = (record = null) => {
     if (record) {

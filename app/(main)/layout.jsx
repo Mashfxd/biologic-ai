@@ -31,6 +31,8 @@ export default function DashboardLayout({ children }) {
   const [currentUser, setCurrentUser] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [notificationError, setNotificationError] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
 
   const pathname = usePathname();
@@ -88,6 +90,17 @@ export default function DashboardLayout({ children }) {
 
     loadCurrentUser();
   }, [router]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setNotificationError(false);
+    fetch('/api/metrics').then(async (res) => {
+      if (!res.ok) throw new Error('No se pudieron cargar las alertas');
+      const data = await res.json();
+      if (!cancelled) setNotifications(data.alertasRecientes || []);
+    }).catch(() => { if (!cancelled) setNotificationError(true); });
+    return () => { cancelled = true; };
+  }, [pathname, showNotifications]);
 
   const handleLogout = async () => {
     try {
@@ -202,7 +215,7 @@ export default function DashboardLayout({ children }) {
                 className="p-2 text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg relative transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
               >
                 <Bell size={20} aria-hidden="true" focusable="false" />
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full border border-white dark:border-slate-950 animate-pulse" />
+                {!notificationError && notifications.length > 0 && <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-rose-500 rounded-full" />}
               </button>
 
               {showNotifications && (
@@ -215,19 +228,16 @@ export default function DashboardLayout({ children }) {
                   <div id="panel-notificaciones" role="region" aria-label="Notificaciones" className="absolute right-0 mt-2 w-72 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-100 dark:border-slate-800 z-50 overflow-hidden">
                     <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                       <h4 className="text-sm font-bold text-slate-800 dark:text-white">Notificaciones</h4>
-                      <span className="text-[10px] bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 px-2 py-0.5 rounded-full font-bold">2 Nuevas</span>
+                      <span className="text-[10px] bg-rose-100 text-rose-600 dark:bg-rose-500/20 dark:text-rose-400 px-2 py-0.5 rounded-full font-bold">{notificationError ? "Sin datos" : `${notifications.length} registros`}</span>
                     </div>
                     <div className="max-h-64 overflow-y-auto">
-                      <div className="p-4 border-b border-slate-50 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Alerta de Temperatura</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">El galpón A registra 34°C. Riesgo de estrés térmico.</p>
-                        <p className="text-[9px] text-slate-400 mt-2">Hace 10 min</p>
-                      </div>
-                      <div className="p-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors cursor-pointer">
-                        <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Control de Pesaje</p>
-                        <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">Es momento de registrar el peso del Lote 12.</p>
-                        <p className="text-[9px] text-slate-400 mt-2">Hace 2 horas</p>
-                      </div>
+                      {notificationError ? <p className="p-4 text-sm">No se pudieron cargar las alertas. Vuelve a abrir el panel para reintentar.</p> : notifications.length === 0 ? <p className="p-4 text-sm">Sin registros de salud recientes.</p> : notifications.map((notification) => (
+                        <div key={notification.id} className="p-4 border-b border-slate-100 dark:border-slate-800">
+                          <p className="text-xs font-bold">{notification.animal?.name}: {notification.diagnostic}</p>
+                          <p className="text-xs text-slate-500">{notification.treatment}</p>
+                          <time className="text-xs" dateTime={notification.date}>{new Date(notification.date).toLocaleDateString('es-PE', { timeZone: 'America/Lima' })}</time>
+                        </div>
+                      ))}
                     </div>
                   </div>
                 </>

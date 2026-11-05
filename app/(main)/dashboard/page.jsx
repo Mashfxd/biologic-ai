@@ -17,12 +17,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  useEffect(() => {
-    fetchMetrics();
 
-    const savedUser = localStorage.getItem('biologic_user');
-    if (savedUser) setCurrentUser(JSON.parse(savedUser));
-  }, []);
 
   const fetchMetrics = async () => {
     setIsLoading(true);
@@ -40,6 +35,13 @@ export default function DashboardPage() {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchMetrics();
+
+    const savedUser = localStorage.getItem('biologic_user');
+    if (savedUser) setCurrentUser(JSON.parse(savedUser));
+  }, []);
 
   const handleBasicAiAnalysis = () => {
     if (!metrics) return;
@@ -141,7 +143,7 @@ export default function DashboardPage() {
       const res = await fetch('/api/ai/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ metrics }),
+        body: JSON.stringify({}),
       });
 
       if (res.ok) {
@@ -228,7 +230,7 @@ export default function DashboardPage() {
         <StatCard
           icon={Activity}
           label="ICA"
-          value={metrics.eficiencia?.indiceConversionAlimenticia || '0.00'}
+          value={metrics.eficiencia?.indiceConversionAlimenticia ?? 'Sin datos'}
           color="bg-cyan-500"
           trend="kg alimento / kg ganado"
         />

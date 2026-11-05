@@ -14,6 +14,20 @@ export default function UsersPage() {
   const userModalTitleId = editingId ? 'editar-usuario-title' : 'nuevo-usuario-title';
   const firstUserModalFieldRef = useRef(null);
 
+
+
+  const fetchUsers = async () => {
+    try {
+      const res = await fetch('/api/users');
+      const data = await res.json();
+      setUsers(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error(error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (!showModal) return;
 
@@ -55,18 +69,6 @@ export default function UsersPage() {
       setCurrentUserRole(String(user.role || '').trim().toUpperCase());
     }
   }, []);
-
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch('/api/users');
-      const data = await res.json();
-      setUsers(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error(error);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleEditClick = (user) => {
     setEditingId(user.id);

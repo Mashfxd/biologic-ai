@@ -60,7 +60,7 @@ model Animal {
 model HealthLog {
   id         Int      @id @default(autoincrement())
   animal_id  Int
-  animal     Animal   @relation(fields: [animal_id], references: [id], onDelete: Cascade)
+  animal     Animal   @relation(fields: [animal_id], references: [id], onDelete: Restrict)
   date       DateTime @default(now())
   diagnostic String
   treatment  String
@@ -71,7 +71,7 @@ model HealthLog {
 model GrowthLog {
   id        Int      @id @default(autoincrement())
   animal_id Int
-  animal    Animal   @relation(fields: [animal_id], references: [id], onDelete: Cascade)
+  animal    Animal   @relation(fields: [animal_id], references: [id], onDelete: Restrict)
   date      DateTime @default(now())
   weight    Float
 
@@ -81,7 +81,7 @@ model GrowthLog {
 model FeedingLog {
   id        Int      @id @default(autoincrement())
   animal_id Int
-  animal    Animal   @relation(fields: [animal_id], references: [id], onDelete: Cascade)
+  animal    Animal   @relation(fields: [animal_id], references: [id], onDelete: Restrict)
   date      DateTime @default(now())
   food_type String
   quantity  Float
@@ -105,7 +105,7 @@ model ReproductionLog {
   mother         Animal    @relation("MotherRelation", fields: [motherId], references: [id], onDelete: Restrict)
 
   fatherId       Int?
-  father         Animal?   @relation("FatherRelation", fields: [fatherId], references: [id], onDelete: SetNull)
+  father         Animal?   @relation("FatherRelation", fields: [fatherId], references: [id], onDelete: Restrict)
 
   @@index([motherId])
   @@index([fatherId])

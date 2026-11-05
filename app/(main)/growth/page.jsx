@@ -18,10 +18,7 @@ export default function GrowthPage() {
     date: new Date().toISOString().split('T')[0],
   });
 
-  useEffect(() => {
-    fetchRecords();
-    fetchAnimals();
-  }, []);
+
 
   const fetchRecords = async () => {
     setLoading(true);
@@ -48,6 +45,11 @@ export default function GrowthPage() {
       setAnimals([]);
     }
   };
+
+  useEffect(() => {
+    fetchRecords();
+    fetchAnimals();
+  }, []);
 
   const handleOpenModal = (record = null) => {
     if (record) {

@@ -28,9 +28,7 @@ export default function AnimalsPage() {
     litterCode: '',
   });
 
-  useEffect(() => {
-    fetchAnimals();
-  }, []);
+
 
   useEffect(() => {
     if (!showModal) return;
@@ -71,6 +69,10 @@ export default function AnimalsPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    fetchAnimals();
+  }, []);
 
   const handleOpenNewModal = () => {
     setEditingId(null);

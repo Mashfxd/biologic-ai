@@ -19,7 +19,7 @@ export async function POST(req) {
     const { username, password } = parsed.data;
 
     // Agregamos select para obligar a Prisma a traer el rol fresco
-    let user = await prisma.user.findUnique({
+    const user = await prisma.user.findUnique({
       where: { username },
       select: {
         id: true,
@@ -29,46 +29,6 @@ export async function POST(req) {
         email: true,
       },
     });
-
-    // Bootstrap automático si la tabla de usuarios está completamente vacía
-    if (!user) {
-      const totalUsers = await prisma.user.count();
-      if (totalUsers === 0) {
-        const [adminPassword, operatorPassword] = await Promise.all([
-          bcrypt.hash('admin123', 10),
-          bcrypt.hash('operador123', 10),
-        ]);
-
-        await prisma.user.createMany({
-          data: [
-            {
-              username: 'admin',
-              email: 'admin@biologic.ai',
-              password: adminPassword,
-              role: 'ADMIN',
-            },
-            {
-              username: 'operador',
-              email: 'operador@biologic.ai',
-              password: operatorPassword,
-              role: 'OPERATOR',
-            },
-          ],
-          skipDuplicates: true,
-        });
-
-        user = await prisma.user.findUnique({
-          where: { username },
-          select: {
-            id: true,
-            username: true,
-            password: true,
-            role: true,
-            email: true,
-          },
-        });
-      }
-    }
 
     if (!user) {
       return NextResponse.json(

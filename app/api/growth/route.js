@@ -1,37 +1,8 @@
+import { syncAnimalCurrentWeight } from '@/lib/animal-weight.mjs';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { growthLogSchema } from '@/lib/validations';
 import { requireAuth } from '@/lib/auth';
-
-async function syncAnimalCurrentWeight(tx, animalId) {
-  const latestGrowth = await tx.growthLog.findFirst({
-    where: {
-      animal_id: animalId,
-    },
-    orderBy: [
-      {
-        date: 'desc',
-      },
-      {
-        id: 'desc',
-      },
-    ],
-    select: {
-      weight: true,
-    },
-  });
-
-  if (!latestGrowth) return;
-
-  await tx.animal.update({
-    where: {
-      id: animalId,
-    },
-    data: {
-      currentWeight: latestGrowth.weight,
-    },
-  });
-}
 
 export async function GET() {
   const { response } = await requireAuth();
@@ -49,6 +20,7 @@ export async function GET() {
 
     return NextResponse.json(records || []);
   } catch (error) {
+    if (error.code === 'P2034') return NextResponse.json({ error: 'Otro usuario modific? los pesajes. Actualiza y vuelve a intentar.' }, { status: 409 });
     console.error('Error GET GrowthLog:', error);
 
     return NextResponse.json(
@@ -93,10 +65,11 @@ export async function POST(req) {
       await syncAnimalCurrentWeight(tx, data.animal_id);
 
       return createdRecord;
-    });
+    }, { isolationLevel: 'Serializable' });
 
     return NextResponse.json(record, { status: 201 });
   } catch (error) {
+    if (error.code === 'P2034') return NextResponse.json({ error: 'Otro usuario modific? los pesajes. Actualiza y vuelve a intentar.' }, { status: 409 });
     console.error('Error POST GrowthLog:', error);
 
     return NextResponse.json(
@@ -166,10 +139,12 @@ export async function PUT(req) {
       await syncAnimalCurrentWeight(tx, data.animal_id);
 
       return updatedRecord;
-    });
+    }, { isolationLevel: 'Serializable' });
 
     return NextResponse.json(record);
   } catch (error) {
+    if (error.code === 'P2034') return NextResponse.json({ error: 'Otro usuario modific? los pesajes. Actualiza y vuelve a intentar.' }, { status: 409 });
+    if (error.message === 'LAST_WEIGHT') return NextResponse.json({ error: 'El animal debe conservar un pesaje. Edita el peso o registra uno de reemplazo.' }, { status: 409 });
     console.error('Error PUT GrowthLog:', error);
 
     return NextResponse.json(
@@ -213,12 +188,14 @@ export async function DELETE(req) {
       if (record?.animal_id) {
         await syncAnimalCurrentWeight(tx, record.animal_id);
       }
-    });
+    }, { isolationLevel: 'Serializable' });
 
     return NextResponse.json({
       message: 'Registro de crecimiento eliminado',
     });
   } catch (error) {
+    if (error.code === 'P2034') return NextResponse.json({ error: 'Otro usuario modific? los pesajes. Actualiza y vuelve a intentar.' }, { status: 409 });
+    if (error.message === 'LAST_WEIGHT') return NextResponse.json({ error: 'El animal debe conservar un pesaje. Edita el peso o registra uno de reemplazo.' }, { status: 409 });
     console.error('Error DELETE GrowthLog:', error);
 
     return NextResponse.json(

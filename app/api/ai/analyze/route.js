@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getMetrics } from '@/lib/metrics';
 import prisma from '@/lib/prisma';
 import { requireAuth } from '@/lib/auth';
 import { analyzeProduction } from '@/lib/geminiService';
@@ -8,15 +9,8 @@ export async function POST(req) {
   if (response) return response;
 
   try {
-    let clientMetrics = null;
-    try {
-      const body = await req.json();
-      clientMetrics = body?.metrics || null;
-    } catch {
-      // Body opcional
-    }
-
-    const [animals, growthLogs, feedingLogs, healthLogs, totalCount, deceasedCount, productionAgg] =
+    const metrics = await getMetrics();
+    const [animals, growthLogs, feedingLogs, healthLogs] =
       await Promise.all([
         prisma.animal.findMany({
           take: 15,
@@ -61,36 +55,17 @@ export async function POST(req) {
             date: true,
           },
         }),
-        prisma.animal.count(),
-        prisma.animal.count({ where: { status: 'DECEASED' } }),
-        prisma.reproductionLog.aggregate({
-          _sum: { bornAlive: true },
-          _avg: { bornAlive: true },
-        }),
       ]);
 
-    const activeAnimals = animals.filter(
-      (a) => a.status === 'HEALTHY' || a.status === 'SICK'
-    );
-    const sickAnimalsCount = animals.filter((a) => a.status === 'SICK').length;
-
     const summary = {
-      activePopulation:
-        Number(clientMetrics?.poblacionActiva) || activeAnimals.length,
-      sickAnimals:
-        Number(clientMetrics?.animalesEnfermos) || sickAnimalsCount,
-      morbidityRate: Number(clientMetrics?.tasaMorbilidad || 0),
-      mortalityRate:
-        Number(clientMetrics?.tasaMortalidad) ||
-        (totalCount > 0 ? Number(((deceasedCount / totalCount) * 100).toFixed(1)) : 0),
-      avgCurrentWeight: Number(clientMetrics?.pesoPromedioActual || 0),
-      totalBirths:
-        Number(clientMetrics?.produccion?.totalCrias) ||
-        Number(productionAgg._sum.bornAlive || 0),
-      avgBirthsPerDelivery:
-        Number(clientMetrics?.produccion?.promedioCriasPorParto) ||
-        Number((productionAgg._avg.bornAlive || 0).toFixed(1)),
-      ica: Number(clientMetrics?.eficiencia?.indiceConversionAlimenticia || 0),
+      activePopulation: metrics.poblacionActiva,
+      sickAnimals: metrics.animalesEnfermos,
+      morbidityRate: Number(metrics.tasaMorbilidad),
+      mortalityRate: Number(metrics.tasaMortalidad),
+      avgCurrentWeight: Number(metrics.pesoPromedioActual),
+      totalBirths: metrics.produccion.totalCrias,
+      avgBirthsPerDelivery: Number(metrics.produccion.promedioCriasPorParto),
+      ica: Number(metrics.eficiencia.indiceConversionAlimenticia),
     };
 
     const result = await analyzeProduction({
